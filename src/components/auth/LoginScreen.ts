@@ -122,7 +122,8 @@ export function renderLoginScreen(container: HTMLElement): void {
 
     const { error } = await signUp(email, password, name)
     if (error) {
-      showError(error.message)
+      const msg = (error.message && error.message !== '{}') ? error.message : 'Erro ao criar conta. Verifique sua conexão e tente novamente.'
+      showError(msg)
       btn.textContent = 'Criar conta grátis'
       btn.disabled = false
     } else {
