@@ -364,8 +364,7 @@ function renderDashboardChapters(chapters: Chapter[]) {
 }
 
 function renderDashboardCharacters(characters: Character[]) {
-  const grid = document.querySelector('#view-dashboard .char-card-mini')?.parentElement
-    ?? document.querySelector('#view-dashboard .char-mini-grid')
+  const grid = document.getElementById('dash-char-grid')
   if (!grid) return
 
   if (characters.length === 0) {
@@ -1013,7 +1012,7 @@ async function loadStats() {
     }, false)
 
     // Character appearances
-    const charBars = document.querySelector('#view-estatisticas .two-col .card:last-child > div:last-child') as HTMLElement
+    const charBars = document.getElementById('stats-char-bars') as HTMLElement
     if (charBars && characters.length > 0) {
       const maxCount = characters[0] ? 18 : 1 // rough placeholder; ideally from DB
       charBars.innerHTML = characters.slice(0, 5).map(c => `

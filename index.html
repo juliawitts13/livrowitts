@@ -748,8 +748,8 @@ body.focus-mode .editor-body { padding: 60px 80px; }
 
   <div class="book-selector" onclick="openBookPicker()">
     <div>
-      <div class="book-name" id="current-book-name">A Coroa Despedaçada</div>
-      <div class="book-chapters">24 capítulos · Fantasia</div>
+      <div class="book-name" id="current-book-name">Carregando...</div>
+      <div class="book-chapters"></div>
     </div>
     <div class="chevron">⌄</div>
   </div>
@@ -760,16 +760,16 @@ body.focus-mode .editor-body { padding: 60px 80px; }
       <span class="nav-icon">🏠</span> Dashboard
     </div>
     <div class="nav-item" onclick="showView('personagens', this)">
-      <span class="nav-icon">👥</span> Personagens <span class="nav-badge">12</span>
+      <span class="nav-icon">👥</span> Personagens <span class="nav-badge"></span>
     </div>
     <div class="nav-item" onclick="showView('capitulos', this)">
-      <span class="nav-icon">📚</span> Capítulos <span class="nav-badge">24</span>
+      <span class="nav-icon">📚</span> Capítulos <span class="nav-badge"></span>
     </div>
     <div class="nav-item" onclick="showView('timeline', this)">
       <span class="nav-icon">🗺️</span> Linha do Tempo
     </div>
     <div class="nav-item" onclick="showView('locais', this)">
-      <span class="nav-icon">🌍</span> Locais <span class="nav-badge">8</span>
+      <span class="nav-icon">🌍</span> Locais <span class="nav-badge"></span>
     </div>
     <div class="nav-item" onclick="showView('relacoes', this)">
       <span class="nav-icon">❤️</span> Relações
@@ -779,7 +779,7 @@ body.focus-mode .editor-body { padding: 60px 80px; }
   <div class="nav-section">
     <div class="nav-label">Biblioteca</div>
     <div class="nav-item" onclick="showView('ideias', this)">
-      <span class="nav-icon">💡</span> Ideias <span class="nav-badge">7</span>
+      <span class="nav-icon">💡</span> Ideias <span class="nav-badge"></span>
     </div>
     <div class="nav-item" onclick="showView('pesquisas', this)">
       <span class="nav-icon">🔬</span> Pesquisas
@@ -848,110 +848,42 @@ body.focus-mode .editor-body { padding: 60px 80px; }
       <div class="stat-grid">
         <div class="stat-card animate-in" style="animation-delay:0s">
           <div class="stat-label">Total de palavras</div>
-          <div class="stat-value">87.340</div>
-          <div class="stat-sub">+1.240 esta semana</div>
+          <div class="stat-value">—</div>
+          <div class="stat-sub">—</div>
         </div>
         <div class="stat-card animate-in" style="animation-delay:0.05s">
           <div class="stat-label">Capítulos</div>
-          <div class="stat-value">24 <span style="font-size:14px;color:var(--text-3)">/ 36</span></div>
-          <div class="stat-sub">67% concluídos</div>
+          <div class="stat-value">—</div>
+          <div class="stat-sub">—</div>
         </div>
         <div class="stat-card animate-in" style="animation-delay:0.1s">
           <div class="stat-label">Personagens</div>
-          <div class="stat-value">12</div>
-          <div class="stat-sub">3 POV, 9 secundários</div>
+          <div class="stat-value">—</div>
+          <div class="stat-sub">—</div>
         </div>
         <div class="stat-card animate-in" style="animation-delay:0.15s">
           <div class="stat-label">Sequência de escrita</div>
-          <div class="stat-value">14 <span style="font-size:14px;color:var(--text-3)">dias</span></div>
-          <div class="stat-sub">Recorde: 21 dias</div>
+          <div class="stat-value">—</div>
+          <div class="stat-sub">—</div>
         </div>
       </div>
 
       <div class="two-col">
         <div class="card animate-in" style="animation-delay:0.2s">
           <div class="section-title">Capítulos recentes</div>
-          <div class="chapter-list">
-            <div class="chapter-item" onclick="showView('capitulos', document.querySelectorAll('.nav-item')[2])">
-              <div class="ch-num">24</div>
-              <div class="ch-info">
-                <div class="ch-title">Os Portões de Ashenveil</div>
-                <div class="ch-meta">3.120 palavras · há 2 horas</div>
-              </div>
-              <div class="ch-status status-draft">Rascunho</div>
-            </div>
-            <div class="chapter-item" onclick="showView('capitulos', document.querySelectorAll('.nav-item')[2])">
-              <div class="ch-num">23</div>
-              <div class="ch-info">
-                <div class="ch-title">Sangue e Cerimônia</div>
-                <div class="ch-meta">4.580 palavras · ontem</div>
-              </div>
-              <div class="ch-status status-review">Revisão</div>
-            </div>
-            <div class="chapter-item" onclick="showView('capitulos', document.querySelectorAll('.nav-item')[2])">
-              <div class="ch-num">22</div>
-              <div class="ch-info">
-                <div class="ch-title">Uma Carta Não Aberta</div>
-                <div class="ch-meta">2.870 palavras · há 3 dias</div>
-              </div>
-              <div class="ch-status status-done">Finalizado</div>
-            </div>
-            <div class="chapter-item" onclick="showView('capitulos', document.querySelectorAll('.nav-item')[2])">
-              <div class="ch-num">21</div>
-              <div class="ch-info">
-                <div class="ch-title">A Cachoeira Sussurrante</div>
-                <div class="ch-meta">3.940 palavras · há 4 dias</div>
-              </div>
-              <div class="ch-status status-done">Finalizado</div>
-            </div>
-          </div>
+          <div class="chapter-list"></div>
         </div>
 
         <div style="display:flex;flex-direction:column;gap:20px;">
           <div class="card animate-in" style="animation-delay:0.25s">
             <div class="section-title">Progresso do livro</div>
-            <div class="progress-wrap">
-              <div class="progress-item">
-                <div class="progress-meta">
-                  <span class="progress-name">Ato I — O Despertar</span>
-                  <span class="progress-pct">100%</span>
-                </div>
-                <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
-              </div>
-              <div class="progress-item">
-                <div class="progress-meta">
-                  <span class="progress-name">Ato II — A Fratura</span>
-                  <span class="progress-pct">74%</span>
-                </div>
-                <div class="progress-bar"><div class="progress-fill" style="width:74%"></div></div>
-              </div>
-              <div class="progress-item">
-                <div class="progress-meta">
-                  <span class="progress-name">Ato III — O Acerto de Contas</span>
-                  <span class="progress-pct">0%</span>
-                </div>
-                <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
-              </div>
-            </div>
+            <div class="progress-wrap"></div>
           </div>
           <div class="card animate-in" style="animation-delay:0.3s">
             <div class="section-title">Meta de hoje</div>
             <div class="goal-row">
-              <div class="goal-ring">
-                <svg viewBox="0 0 80 80" width="80" height="80">
-                  <circle cx="40" cy="40" r="34" fill="none" stroke="var(--surface-2)" stroke-width="6"/>
-                  <circle cx="40" cy="40" r="34" fill="none" stroke="var(--accent)" stroke-width="6"
-                    stroke-dasharray="214" stroke-dashoffset="68"
-                    stroke-linecap="round" transform="rotate(-90 40 40)"/>
-                  <text x="40" y="45" text-anchor="middle" font-size="13" font-weight="600" fill="var(--text)">68%</text>
-                </svg>
-              </div>
-              <div class="goal-details">
-                <div class="goal-today">1.360 <span style="font-size:13px;color:var(--text-3);font-weight:400">/ 2.000 palavras</span></div>
-                <div class="goal-target" style="margin-top:4px;">640 palavras para a meta de hoje</div>
-                <div style="margin-top:10px;">
-                  <button class="btn btn-primary" style="font-size:12px;padding:5px 14px;" onclick="showView('capitulos', document.querySelectorAll('.nav-item')[2])">Continuar escrevendo →</button>
-                </div>
+              <div style="font-size:13px;color:var(--text-3);">
+                Configure uma meta de palavras nas Configurações do projeto.
               </div>
             </div>
           </div>
@@ -961,56 +893,12 @@ body.focus-mode .editor-body { padding: 60px 80px; }
       <div class="two-col">
         <div class="card animate-in" style="animation-delay:0.35s">
           <div class="section-title">Personagens ativos</div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
-            <div class="char-card-mini" onclick="showView('personagens', document.querySelectorAll('.nav-item')[1])">
-              <div class="char-avatar" style="background:linear-gradient(135deg,#6B5FE4,#9B8FF8);">EL</div>
-              <div class="char-name-s">Elara</div>
-              <div class="char-role-s">Protagonista</div>
-              <div class="char-count-s">18 caps.</div>
-            </div>
-            <div class="char-card-mini" onclick="showView('personagens', document.querySelectorAll('.nav-item')[1])">
-              <div class="char-avatar" style="background:linear-gradient(135deg,#C84B31,#E07B54);">KA</div>
-              <div class="char-name-s">Kael</div>
-              <div class="char-role-s">Antagonista</div>
-              <div class="char-count-s">11 caps.</div>
-            </div>
-            <div class="char-card-mini" onclick="showView('personagens', document.querySelectorAll('.nav-item')[1])">
-              <div class="char-avatar" style="background:linear-gradient(135deg,#1D7A4A,#35A96B);">SY</div>
-              <div class="char-name-s">Syra</div>
-              <div class="char-role-s">Mentora</div>
-              <div class="char-count-s">9 caps.</div>
-            </div>
-          </div>
+          <div id="dash-char-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;"></div>
         </div>
 
         <div class="card animate-in" style="animation-delay:0.4s">
           <div class="section-title">Próximos eventos</div>
-          <div class="timeline-mini">
-            <div class="tl-item">
-              <div class="tl-dot"></div>
-              <div class="tl-date">Capítulo 25 · Batalha de Ashenveil</div>
-              <div class="tl-title">O cerco começa</div>
-              <div class="tl-chars">
-                <span class="tl-char-tag">Elara</span>
-                <span class="tl-char-tag">Kael</span>
-              </div>
-            </div>
-            <div class="tl-item">
-              <div class="tl-dot secondary"></div>
-              <div class="tl-date">Capítulo 26 · Consequências</div>
-              <div class="tl-title">A revelação de Syra</div>
-              <div class="tl-chars"><span class="tl-char-tag">Syra</span></div>
-            </div>
-            <div class="tl-item">
-              <div class="tl-dot secondary"></div>
-              <div class="tl-date">Capítulo 27 · O Cofre</div>
-              <div class="tl-title">O segredo da Coroa</div>
-              <div class="tl-chars">
-                <span class="tl-char-tag">Elara</span>
-                <span class="tl-char-tag">Mira</span>
-              </div>
-            </div>
-          </div>
+          <div class="timeline-mini"></div>
         </div>
       </div>
     </div>
@@ -1234,14 +1122,7 @@ body.focus-mode .editor-body { padding: 60px 80px; }
       </div>
     </div>
     <div class="content">
-      <div class="three-col">
-        <div class="card"><div style="font-size:24px;margin-bottom:10px;">📄</div><div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">Sistemas de magia na fantasia</div><div style="font-size:12px;color:var(--text-3);">PDF · Artigo acadêmico</div></div>
-        <div class="card"><div style="font-size:24px;margin-bottom:10px;">🔗</div><div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">Arquitetura medieval europeia</div><div style="font-size:12px;color:var(--text-3);">Link · Wikipedia</div></div>
-        <div class="card"><div style="font-size:24px;margin-bottom:10px;">🎥</div><div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">Cerimônias de coroação históricas</div><div style="font-size:12px;color:var(--text-3);">Vídeo · YouTube</div></div>
-        <div class="card"><div style="font-size:24px;margin-bottom:10px;">🖼️</div><div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">Referências de palcos e cenários</div><div style="font-size:12px;color:var(--text-3);">Imagens · Pinterest</div></div>
-        <div class="card"><div style="font-size:24px;margin-bottom:10px;">📝</div><div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">Glossário de termos arcanos</div><div style="font-size:12px;color:var(--text-3);">Nota · Criado por você</div></div>
-        <div class="card" style="border-style:dashed;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;"><div style="font-size:20px;">+</div><div style="font-size:13px;color:var(--text-3);">Adicionar referência</div></div>
-      </div>
+      <div class="three-col"></div>
     </div>
   </div>
 
@@ -1250,51 +1131,14 @@ body.focus-mode .editor-body { padding: 60px 80px; }
     <div class="topbar">
       <div>
         <div class="page-title">Universo</div>
-        <div class="page-sub">Wiki interna do mundo de A Coroa Despedaçada</div>
+        <div class="page-sub">Wiki interna do projeto</div>
       </div>
       <div class="topbar-actions">
         <button class="btn btn-primary">+ Nova entrada</button>
       </div>
     </div>
     <div class="content">
-      <div class="three-col">
-        <div class="card" style="cursor:pointer;" onclick="">
-          <div style="font-size:22px;margin-bottom:8px;">⚡</div>
-          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px;">Sistema de Magia</div>
-          <div style="font-size:12px;color:var(--text-2);line-height:1.6;">As três linhagens e sua relação com o tempo. A magia como memória ancestral.</div>
-          <div style="font-size:11px;color:var(--text-3);margin-top:10px;">7 entradas</div>
-        </div>
-        <div class="card" style="cursor:pointer;">
-          <div style="font-size:22px;margin-bottom:8px;">🏛️</div>
-          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px;">Política e Organizações</div>
-          <div style="font-size:12px;color:var(--text-2);line-height:1.6;">O Conselho dos Magos, o Reino Ashevani, as facções em guerra.</div>
-          <div style="font-size:11px;color:var(--text-3);margin-top:10px;">5 entradas</div>
-        </div>
-        <div class="card" style="cursor:pointer;">
-          <div style="font-size:22px;margin-bottom:8px;">📜</div>
-          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px;">Cronologia do Mundo</div>
-          <div style="font-size:12px;color:var(--text-2);line-height:1.6;">Os grandes eventos que moldaram o mundo antes da história começar.</div>
-          <div style="font-size:11px;color:var(--text-3);margin-top:10px;">12 entradas</div>
-        </div>
-        <div class="card" style="cursor:pointer;">
-          <div style="font-size:22px;margin-bottom:8px;">🌐</div>
-          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px;">Países e Territórios</div>
-          <div style="font-size:12px;color:var(--text-2);line-height:1.6;">Mapa geográfico, culturas, idiomas e disputas territoriais.</div>
-          <div style="font-size:11px;color:var(--text-3);margin-top:10px;">4 entradas</div>
-        </div>
-        <div class="card" style="cursor:pointer;">
-          <div style="font-size:22px;margin-bottom:8px;">📖</div>
-          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px;">Glossário</div>
-          <div style="font-size:12px;color:var(--text-2);line-height:1.6;">Termos, nomes e conceitos específicos deste universo.</div>
-          <div style="font-size:11px;color:var(--text-3);margin-top:10px;">23 entradas</div>
-        </div>
-        <div class="card" style="cursor:pointer;">
-          <div style="font-size:22px;margin-bottom:8px;">⚔️</div>
-          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px;">Regras do Mundo</div>
-          <div style="font-size:12px;color:var(--text-2);line-height:1.6;">Leis da física, da magia, do que é possível e impossível.</div>
-          <div style="font-size:11px;color:var(--text-3);margin-top:10px;">8 entradas</div>
-        </div>
-      </div>
+      <div class="three-col"></div>
     </div>
   </div>
 
@@ -1308,10 +1152,10 @@ body.focus-mode .editor-body { padding: 60px 80px; }
     </div>
     <div class="content">
       <div class="stat-grid" style="margin-bottom:24px;">
-        <div class="stat-card"><div class="stat-label">Total de palavras</div><div class="stat-value">87.340</div></div>
-        <div class="stat-card"><div class="stat-label">Média por capítulo</div><div class="stat-value">3.639</div></div>
-        <div class="stat-card"><div class="stat-label">Maior capítulo</div><div class="stat-value">5.120</div><div class="stat-sub">Cap. 14 · O Duelo</div></div>
-        <div class="stat-card"><div class="stat-label">Dias escrevendo</div><div class="stat-value">68</div></div>
+        <div class="stat-card"><div class="stat-label">Total de palavras</div><div class="stat-value">—</div></div>
+        <div class="stat-card"><div class="stat-label">Média por capítulo</div><div class="stat-value">—</div></div>
+        <div class="stat-card"><div class="stat-label">Maior capítulo</div><div class="stat-value">—</div><div class="stat-sub">—</div></div>
+        <div class="stat-card"><div class="stat-label">Dias escrevendo</div><div class="stat-value">—</div></div>
       </div>
       <div class="two-col" style="margin-bottom:24px;">
         <div class="card">
@@ -1320,13 +1164,7 @@ body.focus-mode .editor-body { padding: 60px 80px; }
         </div>
         <div class="card">
           <div class="section-title">Personagens por aparições</div>
-          <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px;">
-            <div><div class="progress-meta"><span class="progress-name" style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:50%;background:#6B5FE4;"></div>Elara</span><span class="progress-pct">18 caps.</span></div><div class="progress-bar"><div class="progress-fill" style="width:100%;"></div></div></div>
-            <div><div class="progress-meta"><span class="progress-name" style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:50%;background:#C84B31;"></div>Kael</span><span class="progress-pct">11 caps.</span></div><div class="progress-bar"><div class="progress-fill" style="width:61%;background:#C84B31;"></div></div></div>
-            <div><div class="progress-meta"><span class="progress-name" style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:50%;background:#1D7A4A;"></div>Syra</span><span class="progress-pct">9 caps.</span></div><div class="progress-bar"><div class="progress-fill" style="width:50%;background:#1D7A4A;"></div></div></div>
-            <div><div class="progress-meta"><span class="progress-name" style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:50%;background:#7B4FA0;"></div>Mira</span><span class="progress-pct">7 caps.</span></div><div class="progress-bar"><div class="progress-fill" style="width:39%;background:#7B4FA0;"></div></div></div>
-            <div><div class="progress-meta"><span class="progress-name" style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:50%;background:#666;"></div>Ronan</span><span class="progress-pct">5 caps.</span></div><div class="progress-bar"><div class="progress-fill" style="width:28%;background:#666;"></div></div></div>
-          </div>
+          <div id="stats-char-bars" style="display:flex;flex-direction:column;gap:10px;margin-top:4px;"></div>
         </div>
       </div>
       <div class="card">
