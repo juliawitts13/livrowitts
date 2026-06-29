@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   root: '.',
+  base: '/livrowitts/',
   build: {
     outDir: 'dist',
     rollupOptions: {
