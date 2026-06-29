@@ -765,6 +765,11 @@ async function loadLocations() {
     const grid = document.querySelector('.loc-grid') as HTMLElement
     if (!grid) return
 
+    if (locs.length === 0) {
+      grid.innerHTML = '<div style="color:var(--text-3);font-size:13px;padding:20px;">Nenhum local cadastrado ainda.</div>'
+      return
+    }
+
     grid.innerHTML = locs.map((loc, i) => `
       <div class="loc-card">
         <div class="loc-thumb" style="background:${loc.thumb_gradient};">${loc.thumb_emoji}</div>
@@ -797,8 +802,13 @@ async function loadTimeline() {
     const charMap: Record<string, Character> = {}
     characters.forEach(c => { charMap[c.id] = c })
 
-    const content = document.querySelector('#view-timeline .content') as HTMLElement
+    const content = document.getElementById('timeline-content') as HTMLElement
     if (!content) return
+
+    if (events.length === 0) {
+      content.innerHTML = '<div style="color:var(--text-3);font-size:13px;padding:20px;">Nenhum evento na linha do tempo ainda.</div>'
+      return
+    }
 
     content.innerHTML = `
       <div style="display:grid;grid-template-columns:130px 1fr;gap:0;">

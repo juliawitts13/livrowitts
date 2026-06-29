@@ -1092,7 +1092,7 @@ body.focus-mode .editor-body { padding: 60px 80px; }
     <div class="topbar">
       <div>
         <div class="page-title">Capítulos</div>
-        <div class="page-sub">24 capítulos · 87.340 palavras</div>
+        <div class="page-sub">Carregando...</div>
       </div>
       <div class="topbar-actions">
         <button class="btn">Filtrar ▾</button>
@@ -1103,67 +1103,24 @@ body.focus-mode .editor-body { padding: 60px 80px; }
       <div class="chapters-layout">
         <div class="ch-list-panel">
           <div class="ch-list-header">
-            Todos os capítulos <span style="color:var(--text-3);font-weight:400;font-size:11px;">24</span>
+            <span class="ch-list-header-text">Todos os capítulos</span>
           </div>
-          <div id="ch-list">
-            <div class="ch-list-item active" onclick="selectChapter(this,24,'Os Portões de Ashenveil','3.120','Rascunho','status-draft')">
-              <div class="ch-list-num">Capítulo 24</div>
-              <div class="ch-list-title">Os Portões de Ashenveil</div>
-              <div class="ch-list-meta"><span class="ch-list-words">3.120 palavras</span><span class="ch-status status-draft" style="font-size:9px;padding:1px 6px;">Rascunho</span></div>
-            </div>
-            <div class="ch-list-item" onclick="selectChapter(this,23,'Sangue e Cerimônia','4.580','Revisão','status-review')">
-              <div class="ch-list-num">Capítulo 23</div>
-              <div class="ch-list-title">Sangue e Cerimônia</div>
-              <div class="ch-list-meta"><span class="ch-list-words">4.580 palavras</span><span class="ch-status status-review" style="font-size:9px;padding:1px 6px;">Revisão</span></div>
-            </div>
-            <div class="ch-list-item" onclick="selectChapter(this,22,'Uma Carta Não Aberta','2.870','Finalizado','status-done')">
-              <div class="ch-list-num">Capítulo 22</div>
-              <div class="ch-list-title">Uma Carta Não Aberta</div>
-              <div class="ch-list-meta"><span class="ch-list-words">2.870 palavras</span><span class="ch-status status-done" style="font-size:9px;padding:1px 6px;">Finalizado</span></div>
-            </div>
-            <div class="ch-list-item" onclick="selectChapter(this,21,'A Cachoeira Sussurrante','3.940','Finalizado','status-done')">
-              <div class="ch-list-num">Capítulo 21</div>
-              <div class="ch-list-title">A Cachoeira Sussurrante</div>
-              <div class="ch-list-meta"><span class="ch-list-words">3.940 palavras</span><span class="ch-status status-done" style="font-size:9px;padding:1px 6px;">Finalizado</span></div>
-            </div>
-            <div class="ch-list-item" onclick="selectChapter(this,20,'Sombras da Corte','3.210','Finalizado','status-done')">
-              <div class="ch-list-num">Capítulo 20</div>
-              <div class="ch-list-title">Sombras da Corte</div>
-              <div class="ch-list-meta"><span class="ch-list-words">3.210 palavras</span><span class="ch-status status-done" style="font-size:9px;padding:1px 6px;">Finalizado</span></div>
-            </div>
-            <div class="ch-list-item" onclick="selectChapter(this,19,'O Juramento dos Magos','2.640','Finalizado','status-done')">
-              <div class="ch-list-num">Capítulo 19</div>
-              <div class="ch-list-title">O Juramento dos Magos</div>
-              <div class="ch-list-meta"><span class="ch-list-words">2.640 palavras</span><span class="ch-status status-done" style="font-size:9px;padding:1px 6px;">Finalizado</span></div>
-            </div>
-            <div class="ch-list-item" onclick="selectChapter(this,18,'Brasas ao Anoitecer','3.880','Finalizado','status-done')">
-              <div class="ch-list-num">Capítulo 18</div>
-              <div class="ch-list-title">Brasas ao Anoitecer</div>
-              <div class="ch-list-meta"><span class="ch-list-words">3.880 palavras</span><span class="ch-status status-done" style="font-size:9px;padding:1px 6px;">Finalizado</span></div>
-            </div>
-            <div class="ch-list-item" onclick="selectChapter(this,17,'O Diário da Mãe','2.990','Finalizado','status-done')">
-              <div class="ch-list-num">Capítulo 17</div>
-              <div class="ch-list-title">O Diário da Mãe</div>
-              <div class="ch-list-meta"><span class="ch-list-words">2.990 palavras</span><span class="ch-status status-done" style="font-size:9px;padding:1px 6px;">Finalizado</span></div>
-            </div>
-          </div>
+          <div id="ch-list"></div>
         </div>
 
         <div class="editor-panel">
           <div class="editor-topbar">
-            <input class="editor-title-input" id="editor-title" value="Os Portões de Ashenveil"/>
+            <input class="editor-title-input" id="editor-title" value="" placeholder="Título do capítulo"/>
             <div style="display:flex;gap:8px;align-items:center;">
-              <span class="ch-status status-draft" id="editor-status">Rascunho</span>
+              <span class="ch-status status-draft" id="editor-status"></span>
               <button class="btn" onclick="toggleChapterMenu()">···</button>
               <button class="btn btn-primary" onclick="saveChapter()">Salvar</button>
             </div>
           </div>
           <div class="editor-meta-bar">
-            <div class="editor-meta-item">📚 Capítulo <strong id="editor-num" style="color:var(--text);">24</strong></div>
-            <div class="editor-meta-item">📝 <strong id="editor-words" style="color:var(--text);">3.120</strong> palavras</div>
-            <div class="editor-meta-item" id="editor-chars-tag">👥 Elara, Kael</div>
-            <div class="editor-meta-item">🌍 Portões de Ashenveil</div>
-            <div class="editor-meta-item" style="margin-left:auto;font-size:11px;color:var(--text-3);" id="editor-save-info">Salvo há 2 min</div>
+            <div class="editor-meta-item">📚 Capítulo <strong id="editor-num" style="color:var(--text);"></strong></div>
+            <div class="editor-meta-item">📝 <strong id="editor-words" style="color:var(--text);">0</strong> palavras</div>
+            <div class="editor-meta-item" style="margin-left:auto;font-size:11px;color:var(--text-3);" id="editor-save-info"></div>
           </div>
           <div class="editor-toolbar">
             <button class="toolbar-btn" onclick="execCmd('bold')" title="Negrito"><b>N</b></button>
@@ -1182,14 +1139,7 @@ body.focus-mode .editor-body { padding: 60px 80px; }
             </div>
           </div>
           <div class="editor-body" id="editor-body">
-            <div class="editor-content" id="editor-content" contenteditable="true" oninput="countWords()" spellcheck="true">
-              <p>Os portões de ferro de Ashenveil erguiam-se diante de Elara como as mandíbulas de alguma besta ancestral, suas barras enferrujadas alcançando o céu como se implorassem aos céus por alívio. Ela os havia visto em sonhos — sempre fechados, sempre à espera.</p>
-              <p>Atrás dela, os remanescentes da companhia moviam-se em silêncio. Doze haviam partido do acampamento Vayne três dias antes. Oito permaneciam.</p>
-              <p>"As proteções ainda estão ativas," murmurou Syra, sua voz mal se distinguindo do vento. Ela pressionou dois dedos contra a barra central do portão, e uma luz violeta fraca pulsou para o exterior como um batimento cardíaco. "Alguém as esteve mantendo."</p>
-              <p>Elara sentiu o familiar magnetismo da magia antiga — a mesma ressonância que a havia conduzido por três reinos e duas cordilheiras. Parecia uma memória que ela jamais havia vivido.</p>
-              <p>"Kael," ela disse. Não era uma pergunta.</p>
-              <p>Syra retirou a mão. "Talvez. Ou algo mais antigo."</p>
-            </div>
+            <div class="editor-content" id="editor-content" contenteditable="true" oninput="countWords()" spellcheck="true"></div>
           </div>
         </div>
       </div>
@@ -1201,82 +1151,15 @@ body.focus-mode .editor-body { padding: 60px 80px; }
     <div class="topbar">
       <div>
         <div class="page-title">Linha do Tempo</div>
-        <div class="page-sub">Cronologia narrativa de A Coroa Despedaçada</div>
+        <div class="page-sub">Cronologia narrativa do projeto</div>
       </div>
       <div class="topbar-actions">
         <button class="btn">Por personagem ▾</button>
         <button class="btn btn-primary">+ Adicionar evento</button>
       </div>
     </div>
-    <div class="content">
-      <div style="display:grid;grid-template-columns:130px 1fr;gap:0;">
-        <div></div>
-        <div style="border-left:2px solid var(--accent);margin-left:20px;padding-left:28px;">
-          <div style="font-size:10px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;padding:0 0 16px;border-bottom:1px solid var(--border);margin-bottom:24px;">Eventos</div>
-
-          <div style="display:flex;flex-direction:column;gap:0;">
-            <div style="display:flex;gap:20px;margin-bottom:28px;align-items:flex-start;">
-              <div style="min-width:115px;max-width:115px;text-align:right;font-size:11px;color:var(--text-3);padding-top:10px;margin-left:-155px;line-height:1.5;">Ano 1032<br>Primavera</div>
-              <div style="position:relative;flex:1;">
-                <div style="position:absolute;left:-36px;top:10px;width:14px;height:14px;border-radius:50%;background:var(--accent);border:3px solid var(--surface);box-shadow:0 0 0 2px var(--accent);"></div>
-                <div class="card">
-                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                    <div style="font-size:14px;font-weight:600;color:var(--text);">Elara descobre o Selo Vayne</div>
-                    <span class="tag accent-tag">Cap. 1</span>
-                  </div>
-                  <div style="font-size:12px;color:var(--text-2);line-height:1.6;margin-bottom:10px;">Nas ruínas abaixo da Academia, Elara tropeça em um selo ancestral com o brasão de uma linhagem considerada extinta. A descoberta coloca todo o enredo em movimento.</div>
-                  <div class="tl-chars"><span class="tl-char-tag">Elara</span></div>
-                </div>
-              </div>
-            </div>
-
-            <div style="display:flex;gap:20px;margin-bottom:28px;align-items:flex-start;">
-              <div style="min-width:115px;max-width:115px;text-align:right;font-size:11px;color:var(--text-3);padding-top:10px;margin-left:-155px;line-height:1.5;">Ano 1032<br>Fim da Primavera</div>
-              <div style="position:relative;flex:1;">
-                <div style="position:absolute;left:-36px;top:10px;width:14px;height:14px;border-radius:50%;background:var(--surface);border:2px solid var(--border-strong);"></div>
-                <div class="card">
-                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                    <div style="font-size:14px;font-weight:600;color:var(--text);">Kael assume o Conselho dos Magos</div>
-                    <span class="tag" style="background:#FCE4E4;color:#C62828;">Cap. 5</span>
-                  </div>
-                  <div style="font-size:12px;color:var(--text-2);line-height:1.6;margin-bottom:10px;">Por meio de traição e manobras políticas, Kael Dorn orquestra a prisão de três membros seniores do Conselho, posicionando-se como Lorde Magistro interino.</div>
-                  <div class="tl-chars"><span class="tl-char-tag">Kael</span><span class="tl-char-tag">Syra</span></div>
-                </div>
-              </div>
-            </div>
-
-            <div style="display:flex;gap:20px;margin-bottom:28px;align-items:flex-start;">
-              <div style="min-width:115px;max-width:115px;text-align:right;font-size:11px;color:var(--text-3);padding-top:10px;margin-left:-155px;line-height:1.5;">Ano 1032<br>Verão</div>
-              <div style="position:relative;flex:1;">
-                <div style="position:absolute;left:-36px;top:10px;width:14px;height:14px;border-radius:50%;background:var(--surface);border:2px solid var(--border-strong);"></div>
-                <div class="card">
-                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                    <div style="font-size:14px;font-weight:600;color:var(--text);">O Exílio começa</div>
-                    <span class="tag">Cap. 9</span>
-                  </div>
-                  <div style="font-size:12px;color:var(--text-2);line-height:1.6;margin-bottom:10px;">Elara é forçada a fugir da capital após Kael declará-la traidora da Coroa. Syra a segue, junto com Mira e um pequeno grupo de magos leais.</div>
-                  <div class="tl-chars"><span class="tl-char-tag">Elara</span><span class="tl-char-tag">Syra</span><span class="tl-char-tag">Mira</span></div>
-                </div>
-              </div>
-            </div>
-
-            <div style="display:flex;gap:20px;margin-bottom:28px;align-items:flex-start;">
-              <div style="min-width:115px;max-width:115px;text-align:right;font-size:11px;color:var(--text-3);padding-top:10px;margin-left:-155px;line-height:1.5;">Ano 1032<br>Outono</div>
-              <div style="position:relative;flex:1;">
-                <div style="position:absolute;left:-36px;top:10px;width:14px;height:14px;border-radius:50%;background:var(--accent);border:3px solid var(--surface);box-shadow:0 0 0 2px var(--accent);"></div>
-                <div class="card" style="border-color:var(--accent);">
-                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                    <div style="font-size:14px;font-weight:600;color:var(--text);">⚡ Cerco de Ashenveil <span style="font-size:11px;font-weight:400;color:var(--text-3);">· Próximo evento</span></div>
-                    <span class="tag accent-tag">Cap. 25</span>
-                  </div>
-                  <div style="font-size:12px;color:var(--text-2);line-height:1.6;margin-bottom:10px;">O confronto climático. Elara lidera um contra-ataque à cidade murada onde a Coroa Despedaçada está guardada. Kael a aguarda.</div>
-                  <div class="tl-chars"><span class="tl-char-tag">Elara</span><span class="tl-char-tag">Kael</span><span class="tl-char-tag">Mira</span></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="content" id="timeline-content">
+      <div style="color:var(--text-3);font-size:13px;padding:20px;">Carregando eventos...</div>
     </div>
   </div>
 
@@ -1285,21 +1168,14 @@ body.focus-mode .editor-body { padding: 60px 80px; }
     <div class="topbar">
       <div>
         <div class="page-title">Locais</div>
-        <div class="page-sub">8 lugares no seu mundo</div>
+        <div class="page-sub">Carregando...</div>
       </div>
       <div class="topbar-actions">
         <button class="btn btn-primary">+ Novo local</button>
       </div>
     </div>
     <div class="content">
-      <div class="loc-grid">
-        <div class="loc-card"><div class="loc-thumb" style="background:linear-gradient(135deg,#1a1a2e,#16213e);">🏰</div><div class="loc-body"><div class="loc-name">Ashenveil</div><div class="loc-desc">A capital murada do Reino Ashevani, sede do Conselho dos Magos e lar do Cofre da Coroa.</div><div class="loc-meta"><div class="loc-meta-item">👥 4 perso.</div><div class="loc-meta-item">📚 12 caps.</div></div></div></div>
-        <div class="loc-card"><div class="loc-thumb" style="background:linear-gradient(135deg,#0d4f3c,#1a7a5a);">🌲</div><div class="loc-body"><div class="loc-name">A Floresta Sussurrante</div><div class="loc-desc">Um bosque ancestral que se diz ter consciência. As árvores se lembram de tudo que passa sob seus galhos.</div><div class="loc-meta"><div class="loc-meta-item">👥 2 perso.</div><div class="loc-meta-item">📚 3 caps.</div></div></div></div>
-        <div class="loc-card"><div class="loc-thumb" style="background:linear-gradient(135deg,#4a1942,#7b2f78);">🔮</div><div class="loc-body"><div class="loc-name">Academia dos Magos</div><div class="loc-desc">A instituição de aprendizado mágico mais antiga do continente. Onde Elara se formou antes do exílio.</div><div class="loc-meta"><div class="loc-meta-item">👥 6 perso.</div><div class="loc-meta-item">📚 8 caps.</div></div></div></div>
-        <div class="loc-card"><div class="loc-thumb" style="background:linear-gradient(135deg,#3a2000,#7a4800);">🏜️</div><div class="loc-body"><div class="loc-name">Os Despojos de Ossos</div><div class="loc-desc">Um vasto deserto que dizem ser os restos de um antigo campo de batalha. Luzes estranhas aparecem à noite.</div><div class="loc-meta"><div class="loc-meta-item">👥 1 perso.</div><div class="loc-meta-item">📚 2 caps.</div></div></div></div>
-        <div class="loc-card"><div class="loc-thumb" style="background:linear-gradient(135deg,#001a3a,#003a70);">⛵</div><div class="loc-body"><div class="loc-name">Porto de Velrath</div><div class="loc-desc">Uma cidade comercial agitada na borda do reino. O grupo de exilados busca refúgio aqui após a fuga.</div><div class="loc-meta"><div class="loc-meta-item">👥 3 perso.</div><div class="loc-meta-item">📚 4 caps.</div></div></div></div>
-        <div class="loc-card"><div class="loc-thumb" style="background:linear-gradient(135deg,#2a0a00,#5a1a00);">🌋</div><div class="loc-body"><div class="loc-name">O Cofre da Coroa</div><div class="loc-desc">Escondido sob Ashenveil, este cofre guarda os fragmentos da Coroa Despedaçada. Protegido por encantamentos ancestrais.</div><div class="loc-meta"><div class="loc-meta-item">👥 2 perso.</div><div class="loc-meta-item">📚 2 caps.</div></div></div></div>
-      </div>
+      <div class="loc-grid"></div>
     </div>
   </div>
 
@@ -1316,81 +1192,8 @@ body.focus-mode .editor-body { padding: 60px 80px; }
       </div>
     </div>
     <div class="content">
-      <div class="two-col">
-        <div class="card">
-          <div class="section-title">Grafo de relacionamentos</div>
-          <div style="position:relative;background:var(--surface-2);border-radius:8px;height:200px;overflow:hidden;">
-            <svg viewBox="0 0 400 200" style="position:absolute;inset:0;width:100%;height:100%;">
-              <line x1="200" y1="100" x2="80" y2="45" stroke="#6B5FE4" stroke-width="2" stroke-dasharray="5,3" opacity="0.5"/>
-              <line x1="200" y1="100" x2="335" y2="45" stroke="#C84B31" stroke-width="2.5" opacity="0.6"/>
-              <line x1="200" y1="100" x2="80" y2="165" stroke="#9B8FF8" stroke-width="2" opacity="0.5"/>
-              <line x1="200" y1="100" x2="335" y2="165" stroke="#35A96B" stroke-width="2" opacity="0.5"/>
-              <line x1="80" y1="45" x2="80" y2="165" stroke="#888" stroke-width="1" opacity="0.2"/>
-              <line x1="80" y1="165" x2="335" y2="165" stroke="#888" stroke-width="1" opacity="0.15"/>
-
-              <circle cx="200" cy="100" r="28" fill="url(#g1)"/>
-              <text x="200" y="105" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">EL</text>
-
-              <circle cx="335" cy="45" r="22" fill="url(#g2)"/>
-              <text x="335" y="50" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">KA</text>
-
-              <circle cx="335" cy="165" r="20" fill="url(#g3)"/>
-              <text x="335" y="170" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">SY</text>
-
-              <circle cx="80" cy="45" r="20" fill="url(#g4)"/>
-              <text x="80" y="50" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">MI</text>
-
-              <circle cx="80" cy="165" r="16" fill="url(#g5)"/>
-              <text x="80" y="170" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">RO</text>
-
-              <defs>
-                <radialGradient id="g1"><stop offset="0%" stop-color="#9B8FF8"/><stop offset="100%" stop-color="#6B5FE4"/></radialGradient>
-                <radialGradient id="g2"><stop offset="0%" stop-color="#E07B54"/><stop offset="100%" stop-color="#C84B31"/></radialGradient>
-                <radialGradient id="g3"><stop offset="0%" stop-color="#35A96B"/><stop offset="100%" stop-color="#1D7A4A"/></radialGradient>
-                <radialGradient id="g4"><stop offset="0%" stop-color="#AF74D6"/><stop offset="100%" stop-color="#7B4FA0"/></radialGradient>
-                <radialGradient id="g5"><stop offset="0%" stop-color="#888"/><stop offset="100%" stop-color="#444"/></radialGradient>
-              </defs>
-            </svg>
-          </div>
-          <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;">
-            <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-2);"><div style="width:18px;height:2px;background:var(--accent);"></div> Aliança</div>
-            <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-2);"><div style="width:18px;height:2px;background:#C84B31;"></div> Conflito</div>
-            <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-2);"><div style="width:18px;height:1px;border-top:2px dashed var(--text-3);"></div> História</div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="section-title">Todas as conexões</div>
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <div style="padding:12px;background:var(--surface-2);border-radius:8px;">
-              <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-                <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6B5FE4,#9B8FF8);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;">EL</div>
-                <div style="font-size:12px;color:var(--text-3);">— Rivais —</div>
-                <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C84B31,#E07B54);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;">KA</div>
-                <span class="tag" style="margin-left:auto;background:#FCE4E4;color:#C62828;">Conflito</span>
-              </div>
-              <div style="font-size:12px;color:var(--text-2);">Ex-colegas na Academia, agora em lados opostos da guerra. Uma compreensão que beira o respeito, por baixo da inimizade.</div>
-            </div>
-            <div style="padding:12px;background:var(--surface-2);border-radius:8px;">
-              <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-                <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6B5FE4,#9B8FF8);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;">EL</div>
-                <div style="font-size:12px;color:var(--text-3);">— Amor —</div>
-                <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#7B4FA0,#AF74D6);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;">MI</div>
-                <span class="tag" style="margin-left:auto;background:#FCEAFF;color:#7B1FA2;">Romance</span>
-              </div>
-              <div style="font-size:12px;color:var(--text-2);">Um vínculo construído durante o exílio, complicado pelos segredos de Mira e o medo de Elara de se vulnerabilizar.</div>
-            </div>
-            <div style="padding:12px;background:var(--surface-2);border-radius:8px;">
-              <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-                <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6B5FE4,#9B8FF8);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;">EL</div>
-                <div style="font-size:12px;color:var(--text-3);">— Mentora —</div>
-                <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#1D7A4A,#35A96B);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;">SY</div>
-                <span class="tag" style="margin-left:auto;background:#EAF5E8;color:#2E7D32;">Aliados</span>
-              </div>
-              <div style="font-size:12px;color:var(--text-2);">Syra guia Elara desde a infância, mas sua verdadeira lealdade e passado permanecem obscuros.</div>
-            </div>
-          </div>
-        </div>
+      <div class="two-col" id="relacoes-content">
+        <div style="color:var(--text-3);font-size:13px;padding:20px;">Carregando relações...</div>
       </div>
     </div>
   </div>
@@ -1414,43 +1217,7 @@ body.focus-mode .editor-body { padding: 60px 80px; }
         </div>
 
         <div class="section-title">Ideias recentes</div>
-        <div class="idea-list" id="idea-list">
-          <div class="idea-item">
-            <div class="idea-dot">💡</div>
-            <div>
-              <div class="idea-text">E se a Coroa Despedaçada só puder ser remontada por alguém que carrega as três linhagens — tornando Elara a única pessoa viva capaz disso (e também a única capaz de destruí-la permanentemente)?</div>
-              <div class="idea-meta">Hoje · Reviravolta na trama</div>
-            </div>
-          </div>
-          <div class="idea-item">
-            <div class="idea-dot">🎭</div>
-            <div>
-              <div class="idea-text">A motivação de Kael não deveria ser poder. E se ele estiver, na verdade, tentando proteger alguém — e a Coroa for o único jeito? Tornaria ele um antagonista muito mais compelling.</div>
-              <div class="idea-meta">Ontem · Personagem</div>
-            </div>
-          </div>
-          <div class="idea-item">
-            <div class="idea-dot">🌍</div>
-            <div>
-              <div class="idea-text">Preciso de uma cena onde Elara vê as ruínas da antiga mansão Vayne. Uma manifestação física de tudo que ela perdeu antes de saber que tinha. Poderia ser o Cap. 17 antes do Juramento dos Magos.</div>
-              <div class="idea-meta">Há 2 dias · Cena</div>
-            </div>
-          </div>
-          <div class="idea-item">
-            <div class="idea-dot">✨</div>
-            <div>
-              <div class="idea-text">O sistema de magia — cada linhagem tem uma relação diferente com o tempo. Vayne percebe ecos de eventos passados. Dorn projeta futuros possíveis. A Coroa os funde. Isso poderia explicar tudo.</div>
-              <div class="idea-meta">Há 3 dias · Worldbuilding</div>
-            </div>
-          </div>
-          <div class="idea-item">
-            <div class="idea-dot">🔗</div>
-            <div>
-              <div class="idea-text">Deixar antecipado no Cap. 3 que Syra sabe mais sobre a paternidade de Elara do que deixa transparecer. Uma única linha que ela quase diz mas não diz. O leitor não vai perceber na primeira leitura.</div>
-              <div class="idea-meta">Há 4 dias · Presságio</div>
-            </div>
-          </div>
-        </div>
+        <div class="idea-list" id="idea-list"></div>
       </div>
     </div>
   </div>
