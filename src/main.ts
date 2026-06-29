@@ -9,9 +9,9 @@ import {
   getProjectStats, getWritingStreak,
 } from './services/projects.service'
 import {
-  getChapters, getRecentChapters, getActs,
+  getChapters, getRecentChapters, getActs, createChapter,
 } from './services/chapters.service'
-import { getCharacters } from './services/characters.service'
+import { getCharacters, upsertCharacter } from './services/characters.service'
 import { getLocations, getLocationCharacterCount, getLocationChapterCount } from './services/locations.service'
 import { getTimelineEvents } from './services/timeline.service'
 import { getIdeas, addIdea as addIdeaService, deleteIdea } from './services/ideas.service'
@@ -131,8 +131,48 @@ async function openWorkspace() {
     if (planEl) planEl.textContent = profile.plan === 'pro' ? 'Pro Writer' : 'Writer'
   }
 
+  // Clear all hardcoded prototype content before loading real data
+  clearHardcodedContent()
+
   // Load dashboard data
   await loadDashboard()
+}
+
+function clearHardcodedContent() {
+  // Dashboard — sections not covered by loadDashboard()
+  const progressWrap = document.querySelector('#view-dashboard .progress-wrap') as HTMLElement
+  if (progressWrap) progressWrap.innerHTML = '<div style="font-size:13px;color:var(--text-3);">Carregando...</div>'
+
+  const goalRow = document.querySelector('#view-dashboard .goal-row') as HTMLElement
+  if (goalRow) goalRow.innerHTML = '<div style="font-size:13px;color:var(--text-3);">—</div>'
+
+  const tlMini = document.querySelector('#view-dashboard .timeline-mini') as HTMLElement
+  if (tlMini) tlMini.innerHTML = '<div style="font-size:13px;color:var(--text-3);">Nenhum evento ainda.</div>'
+
+  // Dashboard chapter list
+  const chList = document.querySelector('#view-dashboard .chapter-list') as HTMLElement
+  if (chList) chList.innerHTML = ''
+
+  // Sidebar nav badges — clear hardcoded counts
+  document.querySelectorAll('.nav-badge').forEach(b => { (b as HTMLElement).textContent = '' })
+
+  // Characters view — clear hardcoded character list and detail
+  const charListContainer = document.querySelector('#view-personagens .char-detail-layout > div:first-child > div:last-child > div') as HTMLElement
+  if (charListContainer) charListContainer.innerHTML = ''
+  const charSidebar = document.querySelector('.char-sidebar-card') as HTMLElement
+  if (charSidebar) charSidebar.innerHTML = '<div style="color:var(--text-3);font-size:13px;padding:20px;text-align:center;">Selecione um personagem.</div>'
+
+  // Chapters view — clear hardcoded chapter list and editor
+  const chListEl = document.getElementById('ch-list') as HTMLElement
+  if (chListEl) chListEl.innerHTML = ''
+  const editorContent = document.getElementById('editor-content') as HTMLElement
+  if (editorContent) editorContent.innerHTML = ''
+  const editorTitle = document.getElementById('editor-title') as HTMLInputElement
+  if (editorTitle) editorTitle.value = ''
+
+  // Timeline — cleared by loadTimeline()
+  // Locations — cleared by loadLocations()
+  // Ideas — cleared by loadIdeas()
 }
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
@@ -240,11 +280,13 @@ async function loadDashboard() {
   if (!project) return
 
   try {
-    const [stats, streak, recentChapters, characters] = await Promise.all([
+    const [stats, streak, recentChapters, characters, acts, timelineEvents] = await Promise.all([
       getProjectStats(project.id),
       getWritingStreak(project.id),
       getRecentChapters(project.id, 4),
       getCharacters(project.id),
+      getActs(project.id),
+      getTimelineEvents(project.id),
     ])
 
     // Today's date subtitle
@@ -267,11 +309,20 @@ async function loadDashboard() {
     }
     setStatCard(3, `${streak} <span style="font-size:14px;color:var(--text-3)">dias</span>`, 'Sequência de escrita')
 
+    // Book progress (acts)
+    renderDashboardProgress(acts, stats)
+
+    // Upcoming events (timeline mini)
+    renderDashboardTimeline(timelineEvents.slice(0, 3))
+
     // Recent chapters
     renderDashboardChapters(recentChapters)
 
     // Active characters
     renderDashboardCharacters(characters.slice(0, 3))
+
+    // Sidebar nav badges
+    updateNavBadges({ characters: stats?.total_characters ?? characters.length, chapters: stats?.total_chapters ?? 0 })
 
   } catch (err) {
     console.error('[Dashboard] Error loading:', err)
@@ -329,6 +380,72 @@ function renderDashboardCharacters(characters: Character[]) {
       <div class="char-role-s">${escapeHtml(c.role ?? '')}</div>
     </div>
   `).join('')
+}
+
+function renderDashboardProgress(acts: Awaited<ReturnType<typeof getActs>>, stats: { total_words: number; target_word_count?: number | null } | null) {
+  const wrap = document.querySelector('#view-dashboard .progress-wrap') as HTMLElement
+  if (!wrap) return
+
+  if (!stats || !acts || acts.length === 0) {
+    wrap.innerHTML = '<div style="font-size:13px;color:var(--text-3);">Nenhum progresso ainda.</div>'
+    return
+  }
+
+  const totalWords = stats.total_words
+  const targetWords = stats.target_word_count ?? 0
+  const pct = targetWords > 0 ? Math.min(100, Math.round((totalWords / targetWords) * 100)) : 0
+
+  wrap.innerHTML = `
+    <div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+        <span style="font-size:12px;color:var(--text-2);">Total do livro</span>
+        <span style="font-size:12px;color:var(--text-3);">${formatWordCount(totalWords)} / ${formatWordCount(targetWords)} palavras</span>
+      </div>
+      <div class="progress-bar" style="margin-bottom:16px;"><div class="progress-fill" style="width:${pct}%;"></div></div>
+      ${acts.map(act => {
+        const actPct = targetWords > 0 ? Math.min(100, Math.round(((act as unknown as Record<string, number>).word_count ?? 0) / targetWords * 100)) : 0
+        return `
+          <div style="margin-bottom:10px;">
+            <div class="progress-meta">
+              <span class="progress-name">${escapeHtml(act.title)}</span>
+              <span class="progress-pct">${actPct}%</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${actPct}%;"></div></div>
+          </div>
+        `
+      }).join('')}
+    </div>
+  `
+}
+
+function renderDashboardTimeline(events: Array<{ title: string; in_world_date?: string | null; is_highlight?: boolean }>) {
+  const tl = document.querySelector('#view-dashboard .timeline-mini') as HTMLElement
+  if (!tl) return
+
+  if (events.length === 0) {
+    tl.innerHTML = '<div style="font-size:13px;color:var(--text-3);">Nenhum evento ainda.</div>'
+    return
+  }
+
+  tl.innerHTML = events.map(ev => `
+    <div class="tl-mini-item" style="display:flex;gap:10px;margin-bottom:10px;align-items:flex-start;">
+      <div style="width:8px;height:8px;border-radius:50%;background:${ev.is_highlight ? 'var(--accent)' : 'var(--border-strong)'};margin-top:4px;flex-shrink:0;"></div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);">${escapeHtml(ev.title)}</div>
+        <div style="font-size:11px;color:var(--text-3);">${escapeHtml(ev.in_world_date ?? '')}</div>
+      </div>
+    </div>
+  `).join('')
+}
+
+function updateNavBadges(counts: { characters: number; chapters: number }) {
+  const badges = document.querySelectorAll('.nav-badge')
+  // Nav order: Personagens(1), Capítulos(2), Timeline(3), Locais(4)...
+  // Only update the ones we have data for
+  const charBadge = document.querySelector('.nav-item[onclick*="personagens"] .nav-badge') as HTMLElement
+  const chapBadge = document.querySelector('.nav-item[onclick*="capitulos"] .nav-badge') as HTMLElement
+  if (charBadge) charBadge.textContent = counts.characters > 0 ? String(counts.characters) : ''
+  if (chapBadge) chapBadge.textContent = counts.chapters > 0 ? String(counts.chapters) : ''
 }
 
 // ─── Chapters ─────────────────────────────────────────────────────────────────
@@ -929,6 +1046,187 @@ function buildBarChart(containerId: string, data: number[], labelFn: (i: number)
       <div class="bar-label">${(i + 1) % skip === 0 ? labelFn(i) : ''}</div>
     `
     container.appendChild(col)
+  })
+}
+
+// ─── New Chapter Modal ────────────────────────────────────────────────────────
+;(window as unknown as Record<string, unknown>)['openNewChapterModal'] = openNewChapterModal
+
+function openNewChapterModal() {
+  const project = appStore.getState().currentProject
+  if (!project) return
+
+  const overlay = document.createElement('div')
+  overlay.className = 'modal-overlay'
+  overlay.innerHTML = `
+    <div class="modal-box" style="max-width:420px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div style="font-size:16px;font-weight:700;color:var(--text);">Novo Capítulo</div>
+        <button class="btn modal-close" style="padding:4px 10px;font-size:14px;">✕</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <div class="wizard-label">Título do capítulo</div>
+          <input id="new-ch-title" class="wizard-input" placeholder="Ex: O começo da jornada" />
+        </div>
+        <div>
+          <div class="wizard-label">Número do capítulo</div>
+          <input id="new-ch-num" type="number" class="wizard-input" min="1" placeholder="Ex: 1" />
+        </div>
+      </div>
+      <div id="new-ch-error" style="color:#C62828;font-size:12px;margin-top:10px;display:none;"></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:20px;">
+        <button class="btn btn-primary" id="new-ch-save">Criar Capítulo ✓</button>
+      </div>
+    </div>
+  `
+
+  document.body.appendChild(overlay)
+  const titleInput = overlay.querySelector('#new-ch-title') as HTMLInputElement
+  const numInput   = overlay.querySelector('#new-ch-num') as HTMLInputElement
+  numInput.value   = String(currentChapterData.length + 1)
+  titleInput.focus()
+
+  overlay.querySelector('.modal-close')!.addEventListener('click', () => overlay.remove())
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove() })
+
+  overlay.querySelector('#new-ch-save')!.addEventListener('click', async () => {
+    const title = titleInput.value.trim() || `Capítulo ${numInput.value}`
+    const num   = parseInt(numInput.value) || (currentChapterData.length + 1)
+    const btn   = overlay.querySelector('#new-ch-save') as HTMLButtonElement
+    const err   = overlay.querySelector('#new-ch-error') as HTMLElement
+
+    btn.textContent = 'Criando...'
+    btn.disabled = true
+
+    try {
+      await createChapter(project.id, null, num, title)
+      overlay.remove()
+      await loadChapters()
+      showView('capitulos', document.querySelector('.nav-item[onclick*="capitulos"]') as HTMLElement)
+    } catch (e) {
+      err.textContent = 'Erro ao criar capítulo. Tente novamente.'
+      err.style.display = 'block'
+      btn.textContent = 'Criar Capítulo ✓'
+      btn.disabled = false
+    }
+  })
+}
+
+// ─── New Character Modal ──────────────────────────────────────────────────────
+;(window as unknown as Record<string, unknown>)['openNewCharacterModal'] = openNewCharacterModal
+
+function openNewCharacterModal() {
+  const project = appStore.getState().currentProject
+  if (!project) return
+
+  const AVATAR_COLORS = [
+    'linear-gradient(135deg,#6B5FE4,#9B8FF8)',
+    'linear-gradient(135deg,#E45F5F,#F89B9B)',
+    'linear-gradient(135deg,#5FA8E4,#9BD0F8)',
+    'linear-gradient(135deg,#5FE49B,#9BF8C3)',
+    'linear-gradient(135deg,#E4B05F,#F8D49B)',
+    'linear-gradient(135deg,#B05FE4,#D49BF8)',
+  ]
+  const ROLES = ['Protagonista','Antagonista','Personagem de Apoio','Mentor','Secundário','Figurante']
+
+  const overlay = document.createElement('div')
+  overlay.className = 'modal-overlay'
+  overlay.innerHTML = `
+    <div class="modal-box" style="max-width:440px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div style="font-size:16px;font-weight:700;color:var(--text);">Novo Personagem</div>
+        <button class="btn modal-close" style="padding:4px 10px;font-size:14px;">✕</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <div class="wizard-label">Nome completo</div>
+          <input id="new-char-name" class="wizard-input" placeholder="Ex: Elara Voss" />
+        </div>
+        <div>
+          <div class="wizard-label">Apelido / nome curto (opcional)</div>
+          <input id="new-char-short" class="wizard-input" placeholder="Ex: Elara" />
+        </div>
+        <div>
+          <div class="wizard-label">Papel na história</div>
+          <select id="new-char-role" class="wizard-input">
+            ${ROLES.map(r => `<option value="${r}">${r}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <div class="wizard-label">Cor do avatar</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            ${AVATAR_COLORS.map((c, i) => `
+              <button class="char-color-btn ${i === 0 ? 'selected' : ''}" data-color="${c}"
+                style="width:28px;height:28px;border-radius:50%;background:${c};border:${i === 0 ? '3px solid var(--accent)' : '3px solid transparent'};cursor:pointer;">
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+      <div id="new-char-error" style="color:#C62828;font-size:12px;margin-top:10px;display:none;"></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:20px;">
+        <button class="btn btn-primary" id="new-char-save">Criar Personagem ✓</button>
+      </div>
+    </div>
+  `
+
+  document.body.appendChild(overlay)
+  let selectedColor = AVATAR_COLORS[0]
+
+  const nameInput = overlay.querySelector('#new-char-name') as HTMLInputElement
+  nameInput.focus()
+
+  overlay.querySelectorAll('.char-color-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      overlay.querySelectorAll('.char-color-btn').forEach(b => {
+        (b as HTMLElement).style.border = '3px solid transparent'
+      });
+      (btn as HTMLElement).style.border = '3px solid var(--accent)'
+      selectedColor = (btn as HTMLElement).dataset.color!
+    })
+  })
+
+  overlay.querySelector('.modal-close')!.addEventListener('click', () => overlay.remove())
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove() })
+
+  overlay.querySelector('#new-char-save')!.addEventListener('click', async () => {
+    const name = nameInput.value.trim()
+    if (!name) {
+      const err = overlay.querySelector('#new-char-error') as HTMLElement
+      err.textContent = 'O nome é obrigatório.'
+      err.style.display = 'block'
+      return
+    }
+    const shortName = (overlay.querySelector('#new-char-short') as HTMLInputElement).value.trim()
+    const role      = (overlay.querySelector('#new-char-role') as HTMLSelectElement).value
+    const btn       = overlay.querySelector('#new-char-save') as HTMLButtonElement
+    const err       = overlay.querySelector('#new-char-error') as HTMLElement
+
+    btn.textContent = 'Criando...'
+    btn.disabled = true
+
+    const initials = name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+
+    try {
+      await upsertCharacter({
+        project_id:   project.id,
+        name,
+        short_name:   shortName || null,
+        role,
+        avatar_color: selectedColor,
+        initials,
+        status:       'alive',
+      })
+      overlay.remove()
+      await loadCharacters()
+      showView('personagens', document.querySelector('.nav-item[onclick*="personagens"]') as HTMLElement)
+    } catch (e) {
+      err.textContent = 'Erro ao criar personagem. Tente novamente.'
+      err.style.display = 'block'
+      btn.textContent = 'Criar Personagem ✓'
+      btn.disabled = false
+    }
   })
 }
 
