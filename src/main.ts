@@ -156,10 +156,10 @@ function clearHardcodedContent() {
   // Sidebar nav badges — clear hardcoded counts
   document.querySelectorAll('.nav-badge').forEach(b => { (b as HTMLElement).textContent = '' })
 
-  // Characters view — clear hardcoded character list and detail
-  const charListContainer = document.querySelector('#view-personagens .char-detail-layout > div:first-child > div:last-child > div') as HTMLElement
-  if (charListContainer) charListContainer.innerHTML = ''
-  const charSidebar = document.querySelector('.char-sidebar-card') as HTMLElement
+  // Characters view — already using IDs, nothing to clear here
+  const charList = document.getElementById('char-list') as HTMLElement
+  if (charList) charList.innerHTML = ''
+  const charSidebar = document.getElementById('char-sidebar-card') as HTMLElement
   if (charSidebar) charSidebar.innerHTML = '<div style="color:var(--text-3);font-size:13px;padding:20px;text-align:center;">Selecione um personagem.</div>'
 
   // Chapters view — clear hardcoded chapter list and editor
@@ -629,8 +629,8 @@ async function loadCharacters() {
     if (currentCharacters.length > 0) {
       renderCharacterDetail(currentCharacters[0])
     } else {
-      const sidebar = document.querySelector('.char-sidebar-card') as HTMLElement
-      if (sidebar) sidebar.innerHTML = '<div style="color:var(--text-3);font-size:13px;padding:20px;text-align:center;">Nenhum personagem ainda.</div>'
+      const sidebar = document.getElementById('char-sidebar-card') as HTMLElement
+      if (sidebar) sidebar.innerHTML = '<div style="color:var(--text-3);font-size:13px;padding:20px;text-align:center;">Nenhum personagem ainda. Clique em "+ Novo personagem" para começar.</div>'
     }
   } catch (err) {
     console.error('[Characters] Error loading:', err)
@@ -638,7 +638,7 @@ async function loadCharacters() {
 }
 
 function renderCharacterList() {
-  const listContainer = document.querySelector('#view-personagens .char-detail-layout > div:first-child > div:last-child > div') as HTMLElement
+  const listContainer = document.getElementById('char-list') as HTMLElement
   if (!listContainer) return
 
   listContainer.innerHTML = currentCharacters.map(c => {
@@ -665,7 +665,7 @@ function renderCharacterList() {
 }
 
 function renderCharacterDetail(char: Character) {
-  const sidebar = document.querySelector('.char-sidebar-card') as HTMLElement
+  const sidebar = document.getElementById('char-sidebar-card') as HTMLElement
   if (!sidebar) return
 
   const statusLabel = { alive:'Viva', dead:'Morta', unknown:'Incerto', missing:'Desaparecido' }[char.status] ?? char.status
@@ -717,14 +717,10 @@ function renderCharacterDetail(char: Character) {
   }
 
   // Update notes tab
-  const notesTab = document.getElementById('char-tab-notas-char')
-  if (notesTab) {
-    const editable = notesTab.querySelector('[contenteditable]') as HTMLElement
-    if (editable) {
-      editable.textContent = char.notes ?? ''
-      // Autosave notes
-      editable.oninput = debounceCharNotes(char.id)
-    }
+  const notesEditor = document.getElementById('char-notes-editor') as HTMLElement
+  if (notesEditor) {
+    notesEditor.textContent = char.notes ?? ''
+    notesEditor.oninput = debounceCharNotes(char.id)
   }
 }
 
@@ -733,7 +729,7 @@ function debounceCharNotes(charId: string) {
   return () => {
     clearTimeout(timer)
     timer = setTimeout(async () => {
-      const el = document.querySelector('#char-tab-notas-char [contenteditable]') as HTMLElement
+      const el = document.getElementById('char-notes-editor') as HTMLElement
       if (!el) return
       const { upsertCharacter } = await import('./services/characters.service')
       await upsertCharacter({ id: charId, project_id: '', notes: el.textContent ?? '' })

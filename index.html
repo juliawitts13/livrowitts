@@ -1021,7 +1021,7 @@ body.focus-mode .editor-body { padding: 60px 80px; }
     <div class="topbar">
       <div>
         <div class="page-title">Personagens</div>
-        <div class="page-sub">12 personagens neste livro</div>
+        <div class="page-sub">Carregando...</div>
       </div>
       <div class="topbar-actions">
         <div class="search-bar"><span>🔍</span> <span class="search-placeholder">Buscar personagens...</span></div>
@@ -1032,57 +1032,12 @@ body.focus-mode .editor-body { padding: 60px 80px; }
       <div class="char-detail-layout">
         <!-- Left column -->
         <div>
-          <div class="char-sidebar-card">
-            <div class="char-avatar-lg" style="background:linear-gradient(135deg,#6B5FE4,#9B8FF8);">EL</div>
-            <div class="char-name-lg">Elara Vayne</div>
-            <div class="char-role-lg">Protagonista · Personagem POV</div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:14px;">
-              <span class="tag accent-tag">Viva</span>
-              <span class="tag">23 anos</span>
-              <span class="tag">Maga</span>
-            </div>
-            <div class="char-stat-row">
-              <div class="char-stat"><div class="char-stat-val">18</div><div class="char-stat-l">Capítulos</div></div>
-              <div class="char-stat"><div class="char-stat-val">4</div><div class="char-stat-l">Relações</div></div>
-              <div class="char-stat"><div class="char-stat-val">2</div><div class="char-stat-l">Locais</div></div>
-            </div>
-            <div style="border-top:1px solid var(--border);padding-top:14px;width:100%;">
-              <div class="char-attr"><div class="char-attr-label">Nacionalidade</div><div class="char-attr-val">Ashevani</div></div>
-              <div class="char-attr"><div class="char-attr-label">Profissão</div><div class="char-attr-val">Aprendiz de Maga da Corte</div></div>
-              <div class="char-attr"><div class="char-attr-label">Idiomas</div><div class="char-attr-val">Comum, Rúnico Antigo, Sylvan</div></div>
-              <div class="char-attr"><div class="char-attr-label">Estado</div><div class="char-attr-val" style="color:#2E7D32;">✓ Viva</div></div>
-            </div>
+          <div class="char-sidebar-card" id="char-sidebar-card">
+            <div style="color:var(--text-3);font-size:13px;padding:20px;text-align:center;">Selecione um personagem.</div>
           </div>
-
           <div style="margin-top:14px;">
             <div class="section-title" style="margin-bottom:10px;">Todos os personagens</div>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <div class="chapter-item" style="border-left:3px solid #6B5FE4;">
-                <div class="char-avatar" style="background:linear-gradient(135deg,#6B5FE4,#9B8FF8);width:32px;height:32px;font-size:11px;flex-shrink:0;">EL</div>
-                <div class="ch-info"><div class="ch-title">Elara Vayne</div><div class="ch-meta">Protagonista</div></div>
-                <div class="ch-status status-done" style="font-size:9px;">Viva</div>
-              </div>
-              <div class="chapter-item">
-                <div class="char-avatar" style="background:linear-gradient(135deg,#C84B31,#E07B54);width:32px;height:32px;font-size:11px;flex-shrink:0;">KA</div>
-                <div class="ch-info"><div class="ch-title">Kael Dorn</div><div class="ch-meta">Antagonista</div></div>
-                <div class="ch-status status-draft" style="font-size:9px;">Vivo</div>
-              </div>
-              <div class="chapter-item">
-                <div class="char-avatar" style="background:linear-gradient(135deg,#1D7A4A,#35A96B);width:32px;height:32px;font-size:11px;flex-shrink:0;">SY</div>
-                <div class="ch-info"><div class="ch-title">Syra do Vale</div><div class="ch-meta">Mentora</div></div>
-                <div class="ch-status status-done" style="font-size:9px;">Viva</div>
-              </div>
-              <div class="chapter-item">
-                <div class="char-avatar" style="background:linear-gradient(135deg,#7B4FA0,#AF74D6);width:32px;height:32px;font-size:11px;flex-shrink:0;">MI</div>
-                <div class="ch-info"><div class="ch-title">Mira Sol</div><div class="ch-meta">Aliada · Interesse amoroso</div></div>
-                <div class="ch-status status-done" style="font-size:9px;">Viva</div>
-              </div>
-              <div class="chapter-item">
-                <div class="char-avatar" style="background:linear-gradient(135deg,#444,#777);width:32px;height:32px;font-size:11px;flex-shrink:0;">RO</div>
-                <div class="ch-info"><div class="ch-title">Ronan Ash</div><div class="ch-meta">Guarda leal</div></div>
-                <div class="ch-status status-review" style="font-size:9px;">Incerto</div>
-              </div>
-            </div>
+            <div id="char-list" style="display:flex;flex-direction:column;gap:6px;"></div>
           </div>
         </div>
 
@@ -1097,148 +1052,33 @@ body.focus-mode .editor-body { padding: 60px 80px; }
           </div>
 
           <div id="char-tab-perfil">
-            <div class="card" style="margin-bottom:16px;">
-              <div class="char-section">
-                <div class="char-section-title">Descrição</div>
-                <div class="char-text">Elara Vayne é uma jovem maga de talento excepcional, sobrecarregada por uma profecia que ela jamais pediu. Seus cabelos prateados e olhos violeta a marcam como a última herdeira da linhagem Vayne — uma linhagem considerada extinta há um século. Ela é ferozmente independente, às vezes em detrimento próprio, e carrega uma tristeza silenciosa pela família que jamais conheceu.</div>
-              </div>
-              <div class="char-section">
-                <div class="char-section-title">Personalidade</div>
-                <div class="char-text">Teimosa, curiosa e ferozmente leal àqueles em quem confia. Ela esconde sua vulnerabilidade por trás de uma ironia afiada e tende a assumir mais do que consegue carregar. Sua empatia é ao mesmo tempo sua maior força e seu ponto mais frágil.</div>
-              </div>
-              <div class="char-section">
-                <div class="char-section-title">Aparência</div>
-                <div class="char-text">1,68m, constituição esguia mas forte. Cabelos prateados curtos com mechas que sempre escapam. Cicatriz fina no queixo de um acidente na Academia. Costuma usar vestimentas práticas de viagem em tons escuros.</div>
-              </div>
-            </div>
-
-            <div class="trait-grid" style="margin-bottom:16px;">
-              <div class="trait-item">
-                <div class="trait-label">Objetivos</div>
-                <div class="trait-val">Desvendar sua linhagem, impedir Kael de tomar a Coroa</div>
-              </div>
-              <div class="trait-item">
-                <div class="trait-label">Medos</div>
-                <div class="trait-val">Perder o controle de seu poder · Tornar-se como Kael</div>
-              </div>
-              <div class="trait-item">
-                <div class="trait-label">Virtudes</div>
-                <div class="trait-val">Leal · Corajosa · Empática · Mente ágil</div>
-              </div>
-              <div class="trait-item">
-                <div class="trait-label">Defeitos</div>
-                <div class="trait-val">Impulsiva · Desconfiada · Auto-sacrifício excessivo</div>
-              </div>
-            </div>
-
-            <div class="card">
-              <div class="section-title">Linha emocional ao longo do livro</div>
-              <div style="position:relative;height:90px;margin-top:8px;">
-                <svg viewBox="0 0 400 80" width="100%" height="80" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="arcGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stop-color="#6B5FE4" stop-opacity="0.25"/>
-                      <stop offset="100%" stop-color="#6B5FE4" stop-opacity="0"/>
-                    </linearGradient>
-                  </defs>
-                  <path d="M0,65 C40,60 60,45 100,38 S160,55 200,32 S260,12 300,22 S360,42 400,14"
-                    stroke="#6B5FE4" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-                  <path d="M0,65 C40,60 60,45 100,38 S160,55 200,32 S260,12 300,22 S360,42 400,14 L400,80 L0,80Z"
-                    fill="url(#arcGrad)"/>
-                  <circle cx="0" cy="65" r="4" fill="#6B5FE4"/>
-                  <circle cx="100" cy="38" r="4" fill="#6B5FE4"/>
-                  <circle cx="200" cy="32" r="4" fill="#6B5FE4"/>
-                  <circle cx="300" cy="22" r="4" fill="#6B5FE4"/>
-                  <circle cx="400" cy="14" r="4" fill="#6B5FE4"/>
-                  <text x="4" y="78" font-size="9" fill="#9A9993">Cap. 1</text>
-                  <text x="88" y="78" font-size="9" fill="#9A9993">Cap. 8</text>
-                  <text x="185" y="78" font-size="9" fill="#9A9993">Cap. 16</text>
-                  <text x="285" y="78" font-size="9" fill="#9A9993">Cap. 24</text>
-                </svg>
-              </div>
-              <div style="display:flex;gap:16px;margin-top:4px;">
-                <div style="font-size:11px;color:var(--text-3);">↑ Crescimento emocional</div>
-                <div style="font-size:11px;color:var(--accent);">— Jornada de Elara</div>
-              </div>
-            </div>
+            <div class="card" style="margin-bottom:16px;" id="char-perfil-card"></div>
+            <div class="trait-grid" style="margin-bottom:16px;" id="char-trait-grid"></div>
           </div>
 
           <div id="char-tab-arco" style="display:none;">
-            <div class="card">
-              <div class="section-title">Arco narrativo</div>
-              <div class="char-text" style="margin-bottom:16px;">O arco de Elara é uma jornada do isolamento à liderança. Ela começa desconfiando de todos ao seu redor e termina como a única pessoa capaz de reunir os fragmentos da Coroa — e da aliança necessária para salvar o reino.</div>
-              <div style="display:flex;flex-direction:column;gap:12px;">
-                <div style="padding:12px;background:var(--surface-2);border-radius:8px;border-left:3px solid var(--accent);">
-                  <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;">Ato I</div>
-                  <div style="font-size:13px;color:var(--text);">Descoberta da linhagem Vayne. Negação e fuga. Formação do grupo de exilados.</div>
-                </div>
-                <div style="padding:12px;background:var(--surface-2);border-radius:8px;border-left:3px solid #E07B54;">
-                  <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;">Ato II</div>
-                  <div style="font-size:13px;color:var(--text);">Confronto com o passado. Desenvolvimento do poder. Traição inesperada. Crise de identidade.</div>
-                </div>
-                <div style="padding:12px;background:var(--surface-2);border-radius:8px;border-left:3px solid #35A96B;opacity:0.6;">
-                  <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;">Ato III (não escrito)</div>
-                  <div style="font-size:13px;color:var(--text-2);">Confronto final. Escolha impossível. Desfecho da linhagem Vayne.</div>
-                </div>
-              </div>
+            <div class="card" id="char-arco-card">
+              <div style="color:var(--text-3);font-size:13px;padding:20px;text-align:center;">Selecione um personagem para ver o arco narrativo.</div>
             </div>
           </div>
 
           <div id="char-tab-relacoes-char" style="display:none;">
-            <div class="card">
-              <div class="section-title">Relações de Elara</div>
-              <div style="display:flex;flex-direction:column;gap:10px;">
-                <div style="padding:12px;background:var(--surface-2);border-radius:8px;">
-                  <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-                    <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#C84B31,#E07B54);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;">KA</div>
-                    <div style="font-size:13px;font-weight:500;color:var(--text);">Kael Dorn</div>
-                    <span class="tag" style="margin-left:auto;background:#FCE4E4;color:#C62828;">Rivais</span>
-                  </div>
-                  <div style="font-size:12px;color:var(--text-2);">Ex-colegas na Academia, agora em lados opostos da guerra pela Coroa. Uma compreensão mútua que beira o respeito, por baixo da inimizade.</div>
-                </div>
-                <div style="padding:12px;background:var(--surface-2);border-radius:8px;">
-                  <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-                    <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#7B4FA0,#AF74D6);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;">MI</div>
-                    <div style="font-size:13px;font-weight:500;color:var(--text);">Mira Sol</div>
-                    <span class="tag" style="margin-left:auto;background:#FCEAFF;color:#7B1FA2;">Romance</span>
-                  </div>
-                  <div style="font-size:12px;color:var(--text-2);">Um vínculo construído aos poucos durante o exílio, complicado pelos próprios segredos de Mira e pelo medo de Elara de se vulnerabilizar.</div>
-                </div>
-                <div style="padding:12px;background:var(--surface-2);border-radius:8px;">
-                  <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-                    <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#1D7A4A,#35A96B);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;">SY</div>
-                    <div style="font-size:13px;font-weight:500;color:var(--text);">Syra do Vale</div>
-                    <span class="tag" style="margin-left:auto;background:#EAF5E8;color:#2E7D32;">Mentora</span>
-                  </div>
-                  <div style="font-size:12px;color:var(--text-2);">Syra guia Elara desde a infância, mas sua verdadeira lealdade e passado permanecem deliberadamente obscuros.</div>
-                </div>
-              </div>
+            <div class="card" id="char-relacoes-card">
+              <div style="color:var(--text-3);font-size:13px;padding:20px;text-align:center;">Selecione um personagem para ver as relações.</div>
             </div>
           </div>
 
           <div id="char-tab-capitulos-char" style="display:none;">
-            <div class="card">
-              <div class="section-title">Capítulos com Elara</div>
-              <div class="chapter-list">
-                <div class="chapter-item"><div class="ch-num">1</div><div class="ch-info"><div class="ch-title">O Selo no Porão</div><div class="ch-meta">3.100 palavras · POV</div></div><div class="ch-status status-done">Finalizado</div></div>
-                <div class="chapter-item"><div class="ch-num">3</div><div class="ch-info"><div class="ch-title">A Sala dos Mapas</div><div class="ch-meta">2.840 palavras · POV</div></div><div class="ch-status status-done">Finalizado</div></div>
-                <div class="chapter-item"><div class="ch-num">7</div><div class="ch-info"><div class="ch-title">O Duelo na Chuva</div><div class="ch-meta">4.120 palavras · POV</div></div><div class="ch-status status-done">Finalizado</div></div>
-                <div class="chapter-item"><div class="ch-num">24</div><div class="ch-info"><div class="ch-title">Os Portões de Ashenveil</div><div class="ch-meta">3.120 palavras · POV</div></div><div class="ch-status status-draft">Rascunho</div></div>
-              </div>
+            <div class="card" id="char-capitulos-card">
+              <div style="color:var(--text-3);font-size:13px;padding:20px;text-align:center;">Selecione um personagem para ver os capítulos.</div>
             </div>
           </div>
 
           <div id="char-tab-notas-char" style="display:none;">
             <div class="card">
-              <div class="section-title">Notas sobre Elara</div>
+              <div class="section-title">Notas</div>
               <div style="min-height:200px;">
-                <div contenteditable="true" style="font-size:13px;color:var(--text-2);line-height:1.8;outline:none;min-height:150px;" placeholder="Suas notas sobre este personagem...">
-                  Verificar se o sotaque de Elara muda quando ela fala Rúnico Antigo — seria um detalhe bonito de caracterização.
-
-Pensar na cena do Capítulo 19 onde ela encontra o diário de sua mãe. Precisa ter mais peso emocional.
-
-Ela sabe nadar? Isso importa no Cap. 22 quando eles cruzam o Rio Velrath.
-                </div>
+                <div contenteditable="true" id="char-notes-editor" style="font-size:13px;color:var(--text-2);line-height:1.8;outline:none;min-height:150px;" placeholder="Suas notas sobre este personagem..."></div>
               </div>
             </div>
           </div>
