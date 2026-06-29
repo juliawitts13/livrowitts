@@ -10,7 +10,6 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
 
   try {
-    // Authenticate user
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) return json({ error: 'Não autenticado' }, 401)
 
@@ -26,18 +25,17 @@ serve(async (req) => {
     const { text, projectId } = await req.json()
     if (!text || !projectId) return json({ error: 'text e projectId são obrigatórios' }, 400)
 
-    // Limit text size to avoid huge OpenAI costs (~100k chars ≈ 25k tokens)
     const excerpt = text.slice(0, 100_000)
 
-    const openaiKey = Deno.env.get('OPENAI_API_KEY')
-    if (!openaiKey) return json({ error: 'OPENAI_API_KEY não configurada no projeto Supabase' }, 500)
+    const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY')
+    if (!anthropicKey) return json({ error: 'ANTHROPIC_API_KEY não configurada no projeto Supabase' }, 500)
 
     const prompt = `Você é um assistente de organização literária. Analise o texto de um livro ou manuscrito abaixo e extraia as informações no formato JSON especificado.
 
 TEXTO DO MANUSCRITO:
 ${excerpt}
 
-Retorne APENAS um JSON válido com esta estrutura (sem markdown, sem explicações):
+Retorne APENAS um JSON válido com esta estrutura (sem markdown, sem explicações, sem blocos de código):
 {
   "chapters": [
     {
@@ -83,28 +81,27 @@ Regras:
 - Inclua apenas locais claramente descritos no texto
 - Para timeline, identifique eventos narrativos importantes em ordem cronológica`
 
-    const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openaiKey}`,
+        'x-api-key': anthropicKey,
+        'anthropic-version': '2023-06-01',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.2,
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 16000,
-        response_format: { type: 'json_object' },
+        messages: [{ role: 'user', content: prompt }],
       }),
     })
 
-    if (!openaiRes.ok) {
-      const err = await openaiRes.text()
-      return json({ error: `Erro OpenAI: ${err}` }, 502)
+    if (!anthropicRes.ok) {
+      const err = await anthropicRes.text()
+      return json({ error: `Erro Anthropic: ${err}` }, 502)
     }
 
-    const openaiData = await openaiRes.json()
-    const raw = openaiData.choices?.[0]?.message?.content ?? '{}'
+    const anthropicData = await anthropicRes.json()
+    const raw = anthropicData.content?.[0]?.text ?? '{}'
     const extracted = JSON.parse(raw)
 
     return json({ ok: true, data: extracted }, 200)
