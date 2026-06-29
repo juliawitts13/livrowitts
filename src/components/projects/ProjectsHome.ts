@@ -303,24 +303,52 @@ function showNewProjectWizard(container: HTMLElement, category = 'Livros'): void
     const chapGoal = parseInt((overlay.querySelector('#proj-chapters') as HTMLInputElement).value) || undefined
 
     try {
-      const project = await createProject({
-        title,
-        subtitle:               subtitle || null,
-        description:            desc || null,
-        category,
-        project_type:           category === 'Livros' ? 'book' : category === 'Acadêmico' ? 'academic' : 'other',
-        cover_emoji:            selectedEmoji,
-        cover_gradient:         'linear-gradient(135deg,#6B5FE4,#9B8FF8)',
-        cover_image_url:        null,
-        genre:                  genre || null,
-        subgenres:              null,
-        language:               lang,
-        status:                 'active',
-        target_word_count:      wordGoal ?? null,
-        total_chapters_planned: chapGoal ?? null,
-        sort_order:             0,
-        metadata:               {},
-      })
+      let project: Project
+      try {
+        project = await createProject({
+          title,
+          subtitle:               subtitle || null,
+          description:            desc || null,
+          category,
+          project_type:           category === 'Livros' ? 'book' : category === 'Acadêmico' ? 'academic' : 'other',
+          cover_emoji:            selectedEmoji,
+          cover_gradient:         'linear-gradient(135deg,#6B5FE4,#9B8FF8)',
+          cover_image_url:        null,
+          genre:                  genre || null,
+          subgenres:              null,
+          language:               lang,
+          status:                 'active',
+          target_word_count:      wordGoal ?? null,
+          total_chapters_planned: chapGoal ?? null,
+          sort_order:             0,
+          metadata:               {},
+        })
+      } catch {
+        // No auth — create local demo project in memory
+        const now = new Date().toISOString()
+        project = {
+          id: crypto.randomUUID(),
+          owner_id: 'demo',
+          title,
+          subtitle: subtitle || null,
+          description: desc || null,
+          category,
+          project_type: category === 'Livros' ? 'book' : category === 'Acadêmico' ? 'academic' : 'other',
+          cover_emoji: selectedEmoji,
+          cover_gradient: 'linear-gradient(135deg,#6B5FE4,#9B8FF8)',
+          cover_image_url: null,
+          genre: genre || null,
+          subgenres: null,
+          language: lang,
+          status: 'active',
+          target_word_count: wordGoal ?? null,
+          total_chapters_planned: chapGoal ?? null,
+          sort_order: 0,
+          metadata: {},
+          created_at: now,
+          updated_at: now,
+        }
+      }
 
       overlay.remove()
       openProject(project)
