@@ -24,6 +24,7 @@ import { escapeHtml } from './utils/escapeHtml'
 import { relativeTime, formatDate } from './utils/date'
 import { IDEA_EMOJIS, IDEA_CATEGORIES, CHAPTER_STATUSES } from './lib/constants'
 import type { Chapter, Character, Location } from './types/database.types'
+import { showImportWordModal } from './components/shared/ImportWordModal'
 
 // ─── Auth Gate ────────────────────────────────────────────────────────────────
 const authContainer = document.getElementById('auth-container') as HTMLDivElement
@@ -171,6 +172,15 @@ function showView(name: string, navEl?: HTMLElement) {
   showProjectsHome()
 }
 
+// ─── Import from Word ─────────────────────────────────────────────────────────
+;(window as unknown as Record<string, unknown>)['openImportWord'] = () => showImportWordModal()
+
+document.addEventListener('story-os:import-complete', () => {
+  // Reload active view after import
+  const activeView = document.querySelector('.view.active')?.id?.replace('view-', '')
+  if (activeView) showView(activeView)
+})
+
 // ─── Sign out ─────────────────────────────────────────────────────────────────
 ;(window as unknown as Record<string, unknown>)['signOut'] = async () => {
   await supabase.auth.signOut()
@@ -237,22 +247,25 @@ async function loadDashboard() {
       getCharacters(project.id),
     ])
 
-    if (!stats) return
-
-    // Stat cards
-    setStatCard(0, formatWordCount(stats.total_words), `+${formatWordCount(0)} esta semana`)
-    setStatCard(1,
-      `${stats.total_chapters} <span style="font-size:14px;color:var(--text-3)">/ ${stats.total_chapters_planned ?? '?'}</span>`,
-      `${stats.completion_pct ?? 0}% concluídos`
-    )
-    setStatCard(2, String(stats.total_characters),
-      `${stats.pov_characters} POV, ${stats.total_characters - stats.pov_characters} secundários`
-    )
-    setStatCard(3, `${streak} <span style="font-size:14px;color:var(--text-3)">dias</span>`, 'Sequência de escrita')
-
     // Today's date subtitle
     const pageSub = document.querySelector('#view-dashboard .page-sub') as HTMLElement
     if (pageSub) pageSub.textContent = formatDate(new Date().toISOString())
+
+    if (stats) {
+      setStatCard(0, formatWordCount(stats.total_words), `+${formatWordCount(0)} esta semana`)
+      setStatCard(1,
+        `${stats.total_chapters} <span style="font-size:14px;color:var(--text-3)">/ ${stats.total_chapters_planned ?? '?'}</span>`,
+        `${stats.completion_pct ?? 0}% concluídos`
+      )
+      setStatCard(2, String(stats.total_characters),
+        `${stats.pov_characters} POV, ${stats.total_characters - stats.pov_characters} secundários`
+      )
+    } else {
+      setStatCard(0, '0', '+0 esta semana')
+      setStatCard(1, '0', '0% concluídos')
+      setStatCard(2, '0', '0 POV, 0 secundários')
+    }
+    setStatCard(3, `${streak} <span style="font-size:14px;color:var(--text-3)">dias</span>`, 'Sequência de escrita')
 
     // Recent chapters
     renderDashboardChapters(recentChapters)
@@ -301,7 +314,13 @@ function renderDashboardChapters(chapters: Chapter[]) {
 
 function renderDashboardCharacters(characters: Character[]) {
   const grid = document.querySelector('#view-dashboard .char-card-mini')?.parentElement
+    ?? document.querySelector('#view-dashboard .char-mini-grid')
   if (!grid) return
+
+  if (characters.length === 0) {
+    grid.innerHTML = '<div style="font-size:13px;color:var(--text-3);padding:10px 0;">Nenhum personagem ainda.</div>'
+    return
+  }
 
   grid.innerHTML = characters.map(c => `
     <div class="char-card-mini" onclick="showView('personagens', document.querySelectorAll('.nav-item')[1])">
@@ -339,6 +358,15 @@ async function loadChapters() {
     if (chapters.length > 0) {
       const firstItem = document.querySelector('.ch-list-item') as HTMLElement
       if (firstItem) selectChapterUI(firstItem, chapters[0])
+    } else {
+      const content = document.getElementById('editor-content') as HTMLElement
+      const titleEl = document.getElementById('editor-title') as HTMLInputElement
+      const numEl   = document.getElementById('editor-num') as HTMLElement
+      const wordsEl = document.getElementById('editor-words') as HTMLElement
+      if (content)  content.innerHTML = ''
+      if (titleEl)  titleEl.value = ''
+      if (numEl)    numEl.textContent = ''
+      if (wordsEl)  wordsEl.textContent = '0 palavras'
     }
   } catch (err) {
     console.error('[Chapters] Error loading:', err)
@@ -481,7 +509,12 @@ async function loadCharacters() {
     const sub = document.querySelector('#view-personagens .page-sub') as HTMLElement
     if (sub) sub.textContent = `${currentCharacters.length} personagens neste projeto`
 
-    if (currentCharacters.length > 0) renderCharacterDetail(currentCharacters[0])
+    if (currentCharacters.length > 0) {
+      renderCharacterDetail(currentCharacters[0])
+    } else {
+      const sidebar = document.querySelector('.char-sidebar-card') as HTMLElement
+      if (sidebar) sidebar.innerHTML = '<div style="color:var(--text-3);font-size:13px;padding:20px;text-align:center;">Nenhum personagem ainda.</div>'
+    }
   } catch (err) {
     console.error('[Characters] Error loading:', err)
   }

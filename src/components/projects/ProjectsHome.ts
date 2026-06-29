@@ -1,4 +1,4 @@
-import { getProjects, createProject } from '../../services/projects.service'
+import { getProjects, createProject, deleteProject } from '../../services/projects.service'
 import { appStore } from '../../store/app.store'
 import { PROJECT_CATEGORY_ICONS, GENRES } from '../../lib/constants'
 import type { Project } from '../../types/database.types'
@@ -78,6 +78,20 @@ function renderProjectGrid(content: HTMLElement, projects: Project[]): void {
     })
   })
 
+  content.querySelectorAll('.btn-delete-project').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation()
+      const id = (btn as HTMLElement).dataset.id!
+      if (!confirm('Excluir este projeto permanentemente? Esta ação não pode ser desfeita.')) return
+      try {
+        await deleteProject(id)
+        await loadProjects(content.closest('.projects-home')!.parentElement as HTMLElement)
+      } catch {
+        alert('Erro ao excluir projeto. Tente novamente.')
+      }
+    })
+  })
+
   content.querySelectorAll('.new-project-card[data-category]').forEach(card => {
     card.addEventListener('click', () => {
       const cat = (card as HTMLElement).dataset.category!
@@ -89,7 +103,11 @@ function renderProjectGrid(content: HTMLElement, projects: Project[]): void {
 function renderProjectCard(p: Project): string {
   const words = ((p.target_word_count ?? 0) / 1000).toFixed(0)
   return `
-    <div class="project-card card" data-id="${p.id}" style="cursor:pointer;padding:0;overflow:hidden;">
+    <div class="project-card card" data-id="${p.id}" style="cursor:pointer;padding:0;overflow:hidden;position:relative;">
+      <button class="btn-delete-project" data-id="${p.id}"
+        style="position:absolute;top:6px;right:6px;z-index:2;background:rgba(0,0,0,0.45);border:none;border-radius:6px;
+               width:26px;height:26px;cursor:pointer;color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;line-height:1;"
+        title="Excluir projeto">🗑</button>
       <div class="project-card-header" style="background:${p.cover_gradient};height:72px;display:flex;align-items:center;justify-content:center;font-size:32px;">
         ${p.cover_image_url
           ? `<img src="${p.cover_image_url}" style="height:100%;width:100%;object-fit:cover;" />`
