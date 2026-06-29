@@ -24,6 +24,7 @@ import { escapeHtml } from './utils/escapeHtml'
 import { relativeTime, formatDate } from './utils/date'
 import { IDEA_EMOJIS, IDEA_CATEGORIES, CHAPTER_STATUSES } from './lib/constants'
 import type { Chapter, Character, Location } from './types/database.types'
+import { showImportWordModal } from './components/shared/ImportWordModal'
 
 // ─── Auth Gate ────────────────────────────────────────────────────────────────
 const authContainer = document.getElementById('auth-container') as HTMLDivElement
@@ -170,6 +171,15 @@ function showView(name: string, navEl?: HTMLElement) {
   appStore.setCurrentProject(null)
   showProjectsHome()
 }
+
+// ─── Import from Word ─────────────────────────────────────────────────────────
+;(window as unknown as Record<string, unknown>)['openImportWord'] = () => showImportWordModal()
+
+document.addEventListener('story-os:import-complete', () => {
+  // Reload active view after import
+  const activeView = document.querySelector('.view.active')?.id?.replace('view-', '')
+  if (activeView) showView(activeView)
+})
 
 // ─── Sign out ─────────────────────────────────────────────────────────────────
 ;(window as unknown as Record<string, unknown>)['signOut'] = async () => {
