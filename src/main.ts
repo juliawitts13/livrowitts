@@ -32,25 +32,31 @@ const projectsLayer = document.getElementById('projects-layer') as HTMLDivElemen
 
 let unsubscribeAuth: (() => void) | null = null
 
-// Boot
+// Boot — show app directly without requiring login
 ;(async () => {
-  const { data: { session } } = await supabase.auth.getSession()
+  authContainer.style.display = 'none'
+  appShell.style.display = 'flex'
+  projectsLayer.style.display = 'none'
 
-  if (!session) {
-    showLogin()
-  } else {
-    await onUserSignedIn(session.user.id)
+  // Try to restore Supabase session in background (non-blocking)
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) {
+      const profile = await getProfile(session.user.id)
+      if (profile) {
+        appStore.setCurrentUser(profile)
+        if (profile.theme === 'dark') {
+          document.body.setAttribute('data-dark', '')
+          updateThemeButtons(true)
+        }
+      }
+    }
+  } catch (_e) {
+    // Supabase unavailable — continue in demo mode
   }
 
-  // Listen for auth changes
-  const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, sess) => {
-    if (sess) {
-      await onUserSignedIn(sess.user.id)
-    } else {
-      onUserSignedOut()
-    }
-  })
-  unsubscribeAuth = () => subscription.unsubscribe()
+  // Show dashboard view by default
+  showView('dashboard')
 })()
 
 function showLogin() {
