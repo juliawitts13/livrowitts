@@ -685,9 +685,56 @@ body.focus-mode .editor-body { padding: 60px 80px; }
   .search-bar { display: none; }
 }
 
+
+/* ===== AUTH SCREEN ===== */
+.login-screen { display:flex; align-items:center; justify-content:center; height:100vh; width:100%; background:var(--bg); }
+.login-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:36px; width:360px; box-shadow:0 8px 40px rgba(0,0,0,0.08); }
+.login-logo { display:flex; align-items:center; gap:12px; margin-bottom:28px; }
+.login-tabs { display:flex; gap:0; border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:20px; }
+.login-tab { flex:1; padding:8px; font-size:13px; font-weight:600; background:transparent; border:none; cursor:pointer; color:var(--text-3); transition:all 0.15s; }
+.login-tab.active { background:var(--accent); color:#fff; }
+.login-form { display:flex; flex-direction:column; gap:14px; }
+.login-field { display:flex; flex-direction:column; gap:6px; }
+.login-field label { font-size:12px; font-weight:600; color:var(--text-2); }
+.login-field input { padding:9px 12px; border:1px solid var(--border-strong); border-radius:8px; background:var(--surface-2); color:var(--text); font-size:14px; outline:none; }
+.login-field input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-bg); }
+.login-error { padding:10px 12px; background:#FDEBEB; border-radius:8px; font-size:12px; color:#C62828; margin-bottom:8px; }
+
+/* ===== PROJECTS HOME ===== */
+.projects-home { padding:32px 40px; max-width:1100px; margin:0 auto; }
+.projects-topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:32px; }
+.projects-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:16px; }
+.project-card { transition:transform 0.15s, box-shadow 0.15s; }
+.project-card:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,0.12); }
+.new-project-card:hover { border-color:var(--accent) !important; }
+.new-project-card:hover > div { color:var(--accent) !important; }
+
+/* ===== MODAL / WIZARD ===== */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:9000; animation:fadeIn 0.15s; }
+.modal-box { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:28px; width:100%; max-width:480px; max-height:90vh; overflow-y:auto; box-shadow:0 16px 60px rgba(0,0,0,0.25); animation:slideUp 0.2s; }
+@keyframes slideUp { from { transform:translateY(16px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+.wizard-label { font-size:12px; font-weight:600; color:var(--text-2); margin-bottom:6px; }
+.wizard-input { width:100%; padding:9px 12px; border:1px solid var(--border-strong); border-radius:8px; background:var(--surface-2); color:var(--text); font-size:14px; outline:none; font-family:var(--font); resize:vertical; }
+.wizard-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-bg); }
+.wizard-radio { padding:8px 12px; border:2px solid var(--border); border-radius:8px; text-align:center; font-size:13px; cursor:pointer; transition:all 0.15s; color:var(--text-2); }
+.wizard-radio.selected { border-color:var(--accent); background:var(--accent-bg); color:var(--accent-text); font-weight:600; }
+.emoji-picker-btn.selected { border-color:var(--accent) !important; }
+
+/* ===== LAYER WRAPPERS ===== */
+#auth-container, #projects-layer { width:100%; }
+#app-shell { display:flex; flex:1; min-width:0; }
 </style>
 </head>
 <body>
+
+<!-- AUTH LAYER -->
+<div id="auth-container" style="display:none;width:100%;"></div>
+
+<!-- PROJECTS LAYER -->
+<div id="projects-layer" style="display:none;width:100%;overflow-y:auto;"></div>
+
+<!-- APP SHELL (workspace) -->
+<div id="app-shell" style="display:none;">
 
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
@@ -1731,298 +1778,8 @@ Ela sabe nadar? Isso importa no Cap. 22 quando eles cruzam o Rio Velrath.
 
 </main>
 
-<script>
-/* ===== Story OS — app.js ===== */
+</div><!-- /#app-shell -->
 
-// ─── Navigation ───────────────────────────────────────────────────────────────
-function showView(name, navEl) {
-  // Hide all views
-  document.querySelectorAll('.view').forEach(v => {
-    v.classList.remove('active');
-  });
-
-  // Show selected view
-  const target = document.getElementById('view-' + name);
-  if (target) target.classList.add('active');
-
-  // Update nav highlight
-  if (navEl) {
-    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-    navEl.classList.add('active');
-  }
-
-  // Close mobile sidebar
-  closeSidebar();
-
-  // Init charts if stats view
-  if (name === 'estatisticas') initCharts();
-
-  // Focus editor if chapters view
-  if (name === 'capitulos') {
-    setTimeout(() => {
-      const ed = document.getElementById('editor-content');
-      if (ed) countWords();
-    }, 100);
-  }
-}
-
-// ─── Dark Mode ────────────────────────────────────────────────────────────────
-let isDark = false;
-
-function toggleDark() {
-  isDark = !isDark;
-  document.body.setAttribute && (isDark
-    ? document.body.setAttribute('data-dark', '')
-    : document.body.removeAttribute('data-dark'));
-
-  const btn = document.getElementById('theme-btn');
-  if (btn) btn.textContent = isDark ? '☀️' : '🌙';
-
-  const dtBtn = document.getElementById('dark-toggle-btn');
-  if (dtBtn) dtBtn.textContent = isDark ? 'Desativar' : 'Ativar';
-
-  localStorage.setItem('story-os-dark', isDark ? '1' : '0');
-}
-
-// Restore preference
-(function () {
-  const saved = localStorage.getItem('story-os-dark');
-  if (saved === '1') toggleDark();
-})();
-
-// ─── Mobile Sidebar ───────────────────────────────────────────────────────────
-function openSidebar() {
-  document.getElementById('sidebar').classList.add('open');
-  document.getElementById('overlay').classList.add('show');
-}
-
-function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('overlay').classList.remove('show');
-}
-
-// ─── Chapter List ─────────────────────────────────────────────────────────────
-const chapterContents = {
-  24: `<p>Os portões de ferro de Ashenveil erguiam-se diante de Elara como as mandíbulas de alguma besta ancestral, suas barras enferrujadas alcançando o céu como se implorassem aos céus por alívio. Ela os havia visto em sonhos — sempre fechados, sempre à espera.</p><p>Atrás dela, os remanescentes da companhia moviam-se em silêncio. Doze haviam partido do acampamento Vayne três dias antes. Oito permaneciam.</p><p>"As proteções ainda estão ativas," murmurou Syra, sua voz mal se distinguindo do vento. Ela pressionou dois dedos contra a barra central do portão, e uma luz violeta fraca pulsou para o exterior como um batimento cardíaco. "Alguém as esteve mantendo."</p><p>Elara sentiu o familiar magnetismo da magia antiga — a mesma ressonância que a havia conduzido por três reinos e duas cordilheiras. Parecia uma memória que ela jamais havia vivido.</p><p>"Kael," ela disse. Não era uma pergunta.</p><p>Syra retirou a mão. "Talvez. Ou algo mais antigo."</p>`,
-  23: `<p>A câmara do Conselho estava decorada para uma cerimônia que ninguém havia anunciado. Velas pretas nas bordas da mesa oval, flores de inverno que não floresciam nesta estação, e o cheiro pesado de incenso que Elara reconheceu como Resina de Memória — a substância usada em rituais de sangue.</p><p>Kael estava de costas para ela quando ela entrou, observando o grande mapa pendurado na parede norte. Ele não se voltou.</p><p>"Você chegou mais cedo do que esperava," disse ele. Sua voz era a mesma de sempre — calm, medida, quase entediada. "Ou mais tarde do que deveria."</p>`,
-  22: `<p>A carta estava na mesa de escrivaninha do quarto que Mira havia ocupado no Porto de Velrath. Não estava selada. Não havia nome no envelope.</p><p>Elara olhou para ela por um longo tempo sem tocá-la.</p><p>A letra da frente — um simples E, em cursivo elegante — era da mão de sua mãe. Ela reconhecia a escrita dos fragmentos que Syra lhe havia mostrado anos atrás. Fragmentos que lhe disseram pertencer a uma acadêmica morta, uma pesquisadora sem nome.</p><p>Não era uma acadêmica sem nome.</p>`,
-  21: `<p>O som da água os alcançou antes que o viram: um rugido baixo e constante que aumentava à medida que o caminho serpenteava entre os pinheiros. Ronan foi o primeiro a avançar, sua mão pousada no cabo da espada como sempre, mesmo quando não havia nada para temer.</p><p>A cachoeira despencava de um penhasco de pelo menos trinta metros, seus respingos alcançando o grupo como uma chuva fina e fria. Na base, uma piscina de água tão clara que parecia vidro.</p><p>"É aqui," disse Syra. "O lugar que procurávamos."</p>`,
-};
-
-function selectChapter(el, num, title, words, status, statusClass) {
-  document.querySelectorAll('.ch-list-item').forEach(i => i.classList.remove('active'));
-  el.classList.add('active');
-
-  document.getElementById('editor-title').value = title;
-  document.getElementById('editor-num').textContent = num;
-  document.getElementById('editor-words').textContent = words;
-
-  const statusEl = document.getElementById('editor-status');
-  statusEl.textContent = status;
-  statusEl.className = 'ch-status ' + (statusClass || 'status-draft');
-
-  const content = document.getElementById('editor-content');
-  if (content && chapterContents[num]) {
-    content.innerHTML = chapterContents[num];
-  } else if (content) {
-    content.innerHTML = '<p></p>';
-  }
-
-  document.getElementById('editor-save-info').textContent = 'Não salvo';
-  countWords();
-}
-
-// ─── Editor ───────────────────────────────────────────────────────────────────
-function execCmd(cmd, value) {
-  document.getElementById('editor-content').focus();
-  document.execCommand(cmd, false, value || null);
-}
-
-function insertQuote() {
-  const sel = window.getSelection();
-  const text = sel && sel.toString() ? sel.toString() : 'Insira sua citação aqui';
-  document.execCommand('formatBlock', false, 'blockquote');
-}
-
-let saveTimeout;
-function countWords() {
-  const content = document.getElementById('editor-content');
-  if (!content) return;
-  const text = content.innerText || '';
-  const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
-  const counter = document.getElementById('word-counter');
-  if (counter) counter.textContent = words.toLocaleString('pt-BR') + ' palavras';
-
-  // Auto-save indicator
-  const info = document.getElementById('editor-save-info');
-  if (info) info.textContent = 'Editando...';
-  clearTimeout(saveTimeout);
-  saveTimeout = setTimeout(() => {
-    if (info) info.textContent = 'Salvo agora';
-  }, 1500);
-}
-
-function saveChapter() {
-  const info = document.getElementById('editor-save-info');
-  if (info) {
-    info.textContent = 'Salvando...';
-    setTimeout(() => { info.textContent = 'Salvo agora'; }, 600);
-  }
-}
-
-let focusMode = false;
-function toggleFocusMode() {
-  focusMode = !focusMode;
-  document.body.classList.toggle('focus-mode', focusMode);
-  if (focusMode) {
-    document.addEventListener('keydown', exitFocusOnEsc);
-  } else {
-    document.removeEventListener('keydown', exitFocusOnEsc);
-  }
-}
-function exitFocusOnEsc(e) {
-  if (e.key === 'Escape') toggleFocusMode();
-}
-
-// ─── Character tabs ───────────────────────────────────────────────────────────
-function switchCharTab(el, tabId) {
-  document.querySelectorAll('.ctab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-
-  const tabs = ['perfil', 'arco', 'relacoes-char', 'capitulos-char', 'notas-char'];
-  tabs.forEach(id => {
-    const el = document.getElementById('char-tab-' + id);
-    if (el) el.style.display = id === tabId ? 'block' : 'none';
-  });
-}
-
-// ─── Ideas ────────────────────────────────────────────────────────────────────
-const ideaEmojis = ['💡', '🎭', '🌍', '✨', '🔗', '⚡', '🎨', '🔮', '🗝️', '📖'];
-const ideaCategories = ['Trama', 'Personagem', 'Worldbuilding', 'Cena', 'Diálogo', 'Presságio', 'Tema'];
-
-function addIdea() {
-  const input = document.getElementById('idea-input');
-  if (!input || !input.value.trim()) return;
-
-  const text = input.value.trim();
-  const emoji = ideaEmojis[Math.floor(Math.random() * ideaEmojis.length)];
-  const cat = ideaCategories[Math.floor(Math.random() * ideaCategories.length)];
-
-  const list = document.getElementById('idea-list');
-  const item = document.createElement('div');
-  item.className = 'idea-item';
-  item.innerHTML = `
-    <div class="idea-dot">${emoji}</div>
-    <div>
-      <div class="idea-text">${escapeHtml(text)}</div>
-      <div class="idea-meta">Agora · ${cat}</div>
-    </div>
-  `;
-  item.style.opacity = '0';
-  item.style.transform = 'translateY(-8px)';
-  list.insertBefore(item, list.firstChild);
-
-  requestAnimationFrame(() => {
-    item.style.transition = 'all 0.25s ease';
-    item.style.opacity = '1';
-    item.style.transform = 'translateY(0)';
-  });
-
-  input.value = '';
-}
-
-function escapeHtml(text) {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
-
-// ─── Book Picker (simple) ─────────────────────────────────────────────────────
-function openBookPicker() {
-  const books = ['A Coroa Despedaçada', 'O Último Arquiteto', 'Ecos do Silêncio'];
-  const current = document.getElementById('current-book-name').textContent;
-  const next = books[(books.indexOf(current) + 1) % books.length];
-  // In a real app this would open a modal
-  alert(`📚 Seus livros:\n\n${books.map((b, i) => (b === current ? '✓ ' : '  ') + b).join('\n')}\n\n(Em produção: seletor completo de livros)`);
-}
-
-// ─── Charts ───────────────────────────────────────────────────────────────────
-function initCharts() {
-  // Words per chapter
-  const capsData = [65, 55, 48, 72, 60, 40, 88, 52, 68, 75, 62, 80, 58, 92, 45, 70, 66, 53, 78, 63, 85, 47, 71, 68];
-  buildBarChart('bar-chart-caps', capsData, i => `${i + 1}`, true);
-
-  // Writing activity
-  const actData = [30, 0, 50, 40, 0, 60, 70, 55, 20, 75, 65, 80, 72, 45, 90, 60, 55, 40, 0, 68, 72, 85, 78, 65, 70, 92, 52, 60, 38, 48];
-  buildBarChart('bar-chart-activity', actData, i => `${i + 1}`, false);
-}
-
-function buildBarChart(containerId, data, labelFn, showAll) {
-  const container = document.getElementById(containerId);
-  if (!container || container.children.length > 0) return;
-
-  const max = Math.max(...data);
-  const display = showAll ? data : data;
-  const skip = display.length > 20 ? 5 : 1;
-
-  display.forEach((val, i) => {
-    const col = document.createElement('div');
-    col.className = 'bar-col';
-    const heightPx = Math.round((val / max) * 88);
-    col.innerHTML = `
-      <div class="bar-fill" style="height:${heightPx}px;" title="${val.toLocaleString('pt-BR')} palavras"></div>
-      <div class="bar-label">${(i + 1) % skip === 0 ? labelFn(i) : ''}</div>
-    `;
-    container.appendChild(col);
-  });
-}
-
-// ─── Chapter menu (simple) ────────────────────────────────────────────────────
-function toggleChapterMenu() {
-  alert('Menu do capítulo:\n\n• Exportar como TXT\n• Duplicar capítulo\n• Mover para outro ato\n• Excluir capítulo\n\n(Em produção: menu contextual completo)');
-}
-
-// ─── Focus helper ─────────────────────────────────────────────────────────────
-function focusSearch() {
-  const msg = 'Busca rápida:\n\nDigite o nome de um personagem, capítulo ou local.\n\n(Em produção: busca instantânea com atalho Cmd+K)';
-  alert(msg);
-}
-
-// ─── Keyboard shortcuts ───────────────────────────────────────────────────────
-document.addEventListener('keydown', (e) => {
-  // Cmd/Ctrl + S → save
-  if ((e.metaKey || e.ctrlKey) && e.key === 's') {
-    e.preventDefault();
-    saveChapter();
-  }
-
-  // Cmd/Ctrl + B → bold
-  if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
-    const active = document.getElementById('view-capitulos');
-    if (active && active.classList.contains('active')) {
-      e.preventDefault();
-      execCmd('bold');
-    }
-  }
-
-  // Esc → exit focus mode
-  if (e.key === 'Escape' && focusMode) {
-    toggleFocusMode();
-  }
-});
-
-// ─── Init ─────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  // Initial word count
-  countWords();
-
-  // Animate stat cards on load
-  document.querySelectorAll('.animate-in').forEach((el, i) => {
-    el.style.animationDelay = `${i * 0.05}s`;
-  });
-});
-
-</script>
+<script type="module" src="/src/main.ts"></script>
 </body>
 </html>
