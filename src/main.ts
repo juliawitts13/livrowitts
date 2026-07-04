@@ -43,12 +43,15 @@ let unsubscribeAuth: (() => void) | null = null
     await onUserSignedIn(session.user.id)
   }
 
-  // Listen for auth changes — but don't re-route if user is already inside the workspace
+  // Listen for auth changes — never navigate away if user is already in the workspace or projects screen
   const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, sess) => {
     if (sess) {
-      // TOKEN_REFRESHED fires every ~hour; don't kick user back to projects screen
-      const alreadyInApp = appShell.style.display !== 'none' || projectsLayer.style.display !== 'none'
-      if (alreadyInApp && event === 'TOKEN_REFRESHED') return
+      // Already in workspace → ignore all session events (token refresh, SIGNED_IN re-fires, etc.)
+      if (appShell.style.display !== 'none') return
+      // Already on projects home → ignore everything except a real new sign-in from the login screen
+      if (projectsLayer.style.display !== 'none' && event !== 'SIGNED_IN') return
+      // Auth container not visible means user is not on login screen — don't navigate
+      if (authContainer.style.display === 'none' && event !== 'SIGNED_IN') return
       await onUserSignedIn(sess.user.id)
     } else {
       onUserSignedOut()
