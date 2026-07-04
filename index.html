@@ -853,7 +853,7 @@ body.focus-mode .editor-body { padding: 60px 80px; }
 .login-footer { text-align: center; margin-top: 20px; font-size: 11px; color: var(--text-3); line-height: 1.6; }
 
 /* ===== PROJECTS HOME ===== */
-.ph-root { min-height: 100vh; background: var(--bg); display: flex; flex-direction: column; }
+.ph-root { min-height: 100vh; width: 100%; background: var(--bg); display: flex; flex-direction: column; }
 
 /* Header */
 .ph-header {
@@ -899,7 +899,8 @@ body.focus-mode .editor-body { padding: 60px 80px; }
 .ph-greeting-sub { font-size: 14px; color: var(--text-3); }
 
 /* Content */
-.ph-content { padding: 24px 40px 60px; flex: 1; }
+.ph-content { padding: 24px 40px 60px; flex: 1; max-width: 1300px; width: 100%; }
+.ph-greeting { padding: 36px 40px 8px; max-width: 1300px; width: 100%; }
 .ph-loading { color: var(--text-3); font-size: 13px; }
 
 /* Welcome banner */

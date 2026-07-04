@@ -95,7 +95,7 @@ function onUserSignedOut() {
 // ─── Projects Home ────────────────────────────────────────────────────────────
 async function showProjectsHome() {
   appShell.style.display = 'none'
-  projectsLayer.style.display = 'flex'
+  projectsLayer.style.display = 'block'
   await renderProjectsHome(projectsLayer)
 }
 
