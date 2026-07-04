@@ -36,8 +36,10 @@ export async function renderProjectsHome(container: HTMLElement): Promise<void> 
 
       <!-- Hero greeting -->
       <div class="ph-greeting">
-        <h1 class="ph-greeting-title">Olá, ${firstName} 👋</h1>
-        <p class="ph-greeting-sub">O que você vai escrever hoje?</p>
+        <div class="ph-greeting-inner">
+          <h1 class="ph-greeting-title">Olá, ${firstName} 👋</h1>
+          <p class="ph-greeting-sub">O que você vai escrever hoje?</p>
+        </div>
       </div>
 
       <!-- Content -->
@@ -69,7 +71,7 @@ function renderProjectGrid(content: HTMLElement, projects: Project[]): void {
 
   const totalProjects = projects.length
 
-  content.innerHTML = `
+  content.innerHTML = `<div class="ph-inner">
     ${totalProjects === 0 ? `
       <div class="ph-welcome-banner">
         <div class="ph-welcome-icon">✍️</div>
@@ -92,23 +94,17 @@ function renderProjectGrid(content: HTMLElement, projects: Project[]): void {
               ${cat.label}
               ${!cat.enabled ? '<span class="ph-badge-soon">Em breve</span>' : ''}
             </div>
-            ${cat.enabled ? `
-              <button class="ph-btn-new" data-category="${cat.key}">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Novo projeto
-              </button>
-            ` : ''}
           </div>
 
           <div class="ph-grid">
             ${items.map(p => renderProjectCard(p)).join('')}
-            ${items.length === 0 && cat.enabled ? renderEmptyCard(cat.key) : ''}
+            ${cat.enabled ? renderNewProjectCard(cat.key) : ''}
             ${items.length === 0 && !cat.enabled ? renderComingSoonCard(cat.label, icon) : ''}
           </div>
         </section>
       `
     }).join('')}
-  `
+  </div>`
 
   // Bind project cards
   content.querySelectorAll('.ph-project-card[data-id]').forEach(card => {
@@ -135,7 +131,7 @@ function renderProjectGrid(content: HTMLElement, projects: Project[]): void {
   })
 
   // Bind new project buttons
-  content.querySelectorAll('.ph-btn-new[data-category], .ph-empty-card[data-category]').forEach(el => {
+  content.querySelectorAll('.ph-new-card[data-category], .ph-empty-card[data-category]').forEach(el => {
     el.addEventListener('click', () => {
       const cat = (el as HTMLElement).dataset.category!
       showNewProjectWizard(content.closest('.ph-root')!.parentElement!, cat)
@@ -180,11 +176,13 @@ function renderProjectCard(p: Project): string {
   `
 }
 
-function renderEmptyCard(category: string): string {
+function renderNewProjectCard(category: string): string {
   return `
-    <div class="ph-empty-card" data-category="${category}" role="button" tabindex="0">
-      <div class="ph-empty-icon">+</div>
-      <div class="ph-empty-label">Novo projeto</div>
+    <div class="ph-new-card" data-category="${category}" role="button" tabindex="0">
+      <div class="ph-new-card-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+      <div class="ph-new-card-label">Novo projeto</div>
     </div>
   `
 }
