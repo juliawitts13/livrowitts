@@ -4,147 +4,202 @@ import { PROJECT_CATEGORY_ICONS, GENRES } from '../../lib/constants'
 import type { Project } from '../../types/database.types'
 
 export async function renderProjectsHome(container: HTMLElement): Promise<void> {
+  const user = appStore.getState().currentUser
+  const firstName = user?.display_name?.split(' ')[0] ?? 'Escritor'
+  const initials  = user?.display_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() ?? '?'
+  const avatarColor = user?.avatar_color ?? '#7C5FE8'
+
   container.innerHTML = `
-    <div class="projects-home">
-      <div class="projects-topbar">
-        <div>
-          <div class="page-title">Meus Projetos</div>
-          <div class="page-sub">Escolha um projeto para abrir o workspace</div>
+    <div class="ph-root">
+
+      <!-- Header -->
+      <header class="ph-header">
+        <div class="ph-brand">
+          <div class="ph-logo-mark">S</div>
+          <span class="ph-brand-name">Story OS</span>
         </div>
-        <button class="btn btn-primary" id="btn-new-project">+ Novo Projeto</button>
+        <div class="ph-header-right">
+          <div class="ph-user-chip">
+            <div class="ph-user-avatar" style="background:${avatarColor};">${initials}</div>
+            <span class="ph-user-name">${user?.display_name ?? ''}</span>
+          </div>
+          <button class="ph-btn-ghost" onclick="signOut()" title="Sair">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Sair
+          </button>
+        </div>
+      </header>
+
+      <!-- Hero greeting -->
+      <div class="ph-greeting">
+        <h1 class="ph-greeting-title">Olá, ${firstName} 👋</h1>
+        <p class="ph-greeting-sub">O que você vai escrever hoje?</p>
       </div>
-      <div class="projects-content" id="projects-content">
-        <div style="color:var(--text-3);font-size:13px;">Carregando projetos...</div>
+
+      <!-- Content -->
+      <div class="ph-content" id="projects-content">
+        <div class="ph-loading">Carregando projetos…</div>
       </div>
     </div>
   `
-
-  const btn = container.querySelector('#btn-new-project') as HTMLButtonElement
-  btn.addEventListener('click', () => showNewProjectWizard(container))
 
   await loadProjects(container)
 }
 
 async function loadProjects(container: HTMLElement): Promise<void> {
   const content = container.querySelector('#projects-content') as HTMLDivElement
-
   try {
     const projects = await getProjects()
     renderProjectGrid(content, projects)
   } catch {
-    content.innerHTML = `<div style="color:var(--text-3);">Erro ao carregar projetos.</div>`
+    content.innerHTML = `<div class="ph-empty-state">Não foi possível carregar seus projetos. Verifique sua conexão.</div>`
   }
 }
 
 function renderProjectGrid(content: HTMLElement, projects: Project[]): void {
   const categories: Array<{ key: 'Livros' | 'Acadêmico' | 'Outros'; label: string; enabled: boolean }> = [
-    { key: 'Livros',    label: 'Livros',    enabled: true },
+    { key: 'Livros',    label: 'Livros',    enabled: true  },
     { key: 'Acadêmico', label: 'Acadêmico', enabled: false },
     { key: 'Outros',    label: 'Outros',    enabled: false },
   ]
 
-  content.innerHTML = categories.map(cat => {
-    const items = projects.filter(p => p.category === cat.key)
-    const icon  = PROJECT_CATEGORY_ICONS[cat.key]
+  const totalProjects = projects.length
 
-    return `
-      <div class="projects-section" style="margin-bottom:36px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-          <div style="font-size:15px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;">
-            ${icon} ${cat.label}
-            ${!cat.enabled ? '<span class="tag" style="font-size:10px;">Em breve</span>' : ''}
-          </div>
-        </div>
-        <div class="projects-grid">
-          ${items.map(p => renderProjectCard(p)).join('')}
-          ${cat.enabled ? renderNewProjectCard(cat.key) : ''}
-          ${items.length === 0 && !cat.enabled ? `
-            <div class="card" style="grid-column:span 3;text-align:center;padding:32px;border-style:dashed;">
-              <div style="font-size:24px;margin-bottom:8px;">${icon}</div>
-              <div style="font-size:13px;color:var(--text-3);">Nenhum projeto ${cat.label.toLowerCase()} ainda</div>
-            </div>
-          ` : ''}
+  content.innerHTML = `
+    ${totalProjects === 0 ? `
+      <div class="ph-welcome-banner">
+        <div class="ph-welcome-icon">✍️</div>
+        <div>
+          <div class="ph-welcome-title">Bem-vindo ao Story OS!</div>
+          <div class="ph-welcome-sub">Crie seu primeiro projeto e comece a escrever sua história.</div>
         </div>
       </div>
-    `
-  }).join('')
+    ` : ''}
 
-  // Bind click handlers
-  content.querySelectorAll('.project-card[data-id]').forEach(card => {
-    card.addEventListener('click', async () => {
+    ${categories.map(cat => {
+      const items = projects.filter(p => p.category === cat.key)
+      const icon  = PROJECT_CATEGORY_ICONS[cat.key]
+
+      return `
+        <section class="ph-section">
+          <div class="ph-section-header">
+            <div class="ph-section-title">
+              <span class="ph-section-icon">${icon}</span>
+              ${cat.label}
+              ${!cat.enabled ? '<span class="ph-badge-soon">Em breve</span>' : ''}
+            </div>
+            ${cat.enabled ? `
+              <button class="ph-btn-new" data-category="${cat.key}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Novo projeto
+              </button>
+            ` : ''}
+          </div>
+
+          <div class="ph-grid">
+            ${items.map(p => renderProjectCard(p)).join('')}
+            ${items.length === 0 && cat.enabled ? renderEmptyCard(cat.key) : ''}
+            ${items.length === 0 && !cat.enabled ? renderComingSoonCard(cat.label, icon) : ''}
+          </div>
+        </section>
+      `
+    }).join('')}
+  `
+
+  // Bind project cards
+  content.querySelectorAll('.ph-project-card[data-id]').forEach(card => {
+    card.addEventListener('click', () => {
       const id = (card as HTMLElement).dataset.id!
       const project = projects.find(p => p.id === id)
       if (project) openProject(project)
     })
   })
 
-  content.querySelectorAll('.btn-delete-project').forEach(btn => {
+  // Bind delete buttons
+  content.querySelectorAll('.ph-card-delete').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       e.stopPropagation()
       const id = (btn as HTMLElement).dataset.id!
       if (!confirm('Excluir este projeto permanentemente? Esta ação não pode ser desfeita.')) return
       try {
         await deleteProject(id)
-        await loadProjects(content.closest('.projects-home')!.parentElement as HTMLElement)
+        await loadProjects(content.closest('.ph-root')!.parentElement as HTMLElement)
       } catch {
         alert('Erro ao excluir projeto. Tente novamente.')
       }
     })
   })
 
-  content.querySelectorAll('.new-project-card[data-category]').forEach(card => {
-    card.addEventListener('click', () => {
-      const cat = (card as HTMLElement).dataset.category!
-      showNewProjectWizard(content.closest('.projects-home')!.parentElement!, cat)
+  // Bind new project buttons
+  content.querySelectorAll('.ph-btn-new[data-category], .ph-empty-card[data-category]').forEach(el => {
+    el.addEventListener('click', () => {
+      const cat = (el as HTMLElement).dataset.category!
+      showNewProjectWizard(content.closest('.ph-root')!.parentElement!, cat)
     })
   })
 }
 
-function renderProjectCard(p: Project): string {
-  const words = ((p.target_word_count ?? 0) / 1000).toFixed(0)
+function wordProgress(p: Project): string {
+  if (!p.target_word_count) return ''
+  const pct = Math.min(100, Math.round((((p as Record<string, unknown>)['total_words'] as number | undefined ?? 0) / p.target_word_count) * 100))
   return `
-    <div class="project-card card" data-id="${p.id}" style="cursor:pointer;padding:0;overflow:hidden;position:relative;">
-      <button class="btn-delete-project" data-id="${p.id}"
-        style="position:absolute;top:6px;right:6px;z-index:2;background:rgba(0,0,0,0.45);border:none;border-radius:6px;
-               width:26px;height:26px;cursor:pointer;color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;line-height:1;"
-        title="Excluir projeto">🗑</button>
-      <div class="project-card-header" style="background:${p.cover_gradient};height:72px;display:flex;align-items:center;justify-content:center;font-size:32px;">
-        ${p.cover_image_url
-          ? `<img src="${p.cover_image_url}" style="height:100%;width:100%;object-fit:cover;" />`
-          : p.cover_emoji
-        }
+    <div class="ph-card-progress">
+      <div class="ph-progress-bar">
+        <div class="ph-progress-fill" style="width:${pct}%;"></div>
       </div>
-      <div style="padding:14px 16px;">
-        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-          ${p.title}
-        </div>
-        ${p.subtitle ? `<div style="font-size:11px;color:var(--text-3);margin-bottom:6px;">${p.subtitle}</div>` : ''}
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
-          ${p.genre ? `<span class="tag accent-tag">${p.genre}</span>` : ''}
-          <span class="tag">${p.language}</span>
-        </div>
-        <div style="display:flex;gap:14px;">
-          ${p.total_chapters_planned ? `<div style="font-size:11px;color:var(--text-3);">📚 ${p.total_chapters_planned} caps.</div>` : ''}
-          ${p.target_word_count ? `<div style="font-size:11px;color:var(--text-3);">📝 ${words}k palavras</div>` : ''}
-        </div>
-      </div>
+      <span class="ph-progress-label">${pct}% · ${(((p as Record<string, unknown>)['total_words'] as number | undefined ?? 0)/1000).toFixed(1)}k / ${(p.target_word_count/1000).toFixed(0)}k palavras</span>
     </div>
   `
 }
 
-function renderNewProjectCard(category: string): string {
+function renderProjectCard(p: Project): string {
   return `
-    <div class="new-project-card card" data-category="${category}"
-         style="cursor:pointer;border-style:dashed;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:140px;transition:all 0.15s;">
-      <div style="font-size:24px;color:var(--text-3);">+</div>
-      <div style="font-size:13px;color:var(--text-3);">Novo projeto</div>
+    <article class="ph-project-card" data-id="${p.id}" tabindex="0" role="button" aria-label="Abrir ${p.title}">
+      <button class="ph-card-delete" data-id="${p.id}" title="Excluir projeto" aria-label="Excluir ${p.title}">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      </button>
+      <div class="ph-card-cover" style="background:${p.cover_gradient ?? 'linear-gradient(135deg,#6B5FE4,#9B8FF8)'};">
+        ${p.cover_image_url
+          ? `<img src="${p.cover_image_url}" alt="${p.title}" class="ph-card-cover-img"/>`
+          : `<span class="ph-card-emoji">${p.cover_emoji ?? '📖'}</span>`}
+      </div>
+      <div class="ph-card-body">
+        <div class="ph-card-title">${p.title}</div>
+        ${p.subtitle ? `<div class="ph-card-subtitle">${p.subtitle}</div>` : ''}
+        <div class="ph-card-tags">
+          ${p.genre ? `<span class="ph-tag ph-tag-accent">${p.genre}</span>` : ''}
+          <span class="ph-tag">${p.language}</span>
+        </div>
+        ${wordProgress(p)}
+      </div>
+    </article>
+  `
+}
+
+function renderEmptyCard(category: string): string {
+  return `
+    <div class="ph-empty-card" data-category="${category}" role="button" tabindex="0">
+      <div class="ph-empty-icon">+</div>
+      <div class="ph-empty-label">Novo projeto</div>
+    </div>
+  `
+}
+
+function renderComingSoonCard(label: string, icon: string): string {
+  return `
+    <div class="ph-coming-card">
+      <div style="font-size:28px;margin-bottom:8px;">${icon}</div>
+      <div class="ph-coming-label">${label} chegando em breve</div>
     </div>
   `
 }
 
 function openProject(project: Project): void {
   appStore.setCurrentProject(project)
-  // Dispatch custom event — main.ts handles the routing
   document.dispatchEvent(new CustomEvent('story-os:open-project', { detail: { project } }))
 }
 
@@ -160,13 +215,11 @@ function showNewProjectWizard(container: HTMLElement, category = 'Livros'): void
         <button class="btn modal-close" style="padding:4px 10px;font-size:14px;">✕</button>
       </div>
 
-      <!-- Steps -->
       <div class="wizard-steps" style="display:flex;gap:6px;margin-bottom:24px;">
         <div class="wizard-step active" data-step="1" style="flex:1;height:3px;background:var(--accent);border-radius:3px;"></div>
         <div class="wizard-step" data-step="2" style="flex:1;height:3px;background:var(--surface-2);border-radius:3px;transition:background 0.2s;"></div>
       </div>
 
-      <!-- Step 1 -->
       <div id="wizard-step-1">
         <div style="display:flex;flex-direction:column;gap:14px;">
           <div>
@@ -182,10 +235,9 @@ function showNewProjectWizard(container: HTMLElement, category = 'Livros'): void
             <div style="display:flex;gap:8px;">
               ${['Livros','Acadêmico','Outros'].map(cat => `
                 <label style="flex:1;cursor:pointer;">
-                  <input type="radio" name="proj-category" value="${cat}" ${cat === category ? 'checked' : ''}
-                    style="display:none;" />
+                  <input type="radio" name="proj-category" value="${cat}" ${cat === category ? 'checked' : ''} style="display:none;" />
                   <div class="wizard-radio ${cat === category ? 'selected' : ''}" data-value="${cat}">
-                    ${PROJECT_CATEGORY_ICONS[cat]} ${cat}
+                    ${PROJECT_CATEGORY_ICONS[cat as keyof typeof PROJECT_CATEGORY_ICONS] ?? ''} ${cat}
                   </div>
                 </label>
               `).join('')}
@@ -208,7 +260,6 @@ function showNewProjectWizard(container: HTMLElement, category = 'Livros'): void
         </div>
       </div>
 
-      <!-- Step 2 -->
       <div id="wizard-step-2" style="display:none;">
         <div style="display:flex;flex-direction:column;gap:14px;">
           <div>
@@ -230,9 +281,9 @@ function showNewProjectWizard(container: HTMLElement, category = 'Livros'): void
           <div>
             <div class="wizard-label">Emoji de capa</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              ${['📖','👑','🗡️','🔮','🌍','⚡','🏰','🌊','🦋','🌙','🔥','⭐'].map(e => `
-                <button class="emoji-picker-btn ${e === '📖' ? 'selected' : ''}" data-emoji="${e}"
-                  style="font-size:22px;padding:6px;border:2px solid var(--border);border-radius:8px;background:transparent;cursor:pointer;transition:all 0.12s;">
+              ${['📖','👑','🗡️','🔮','🌍','⚡','🏰','🌊','🦋','🌙','🔥','⭐'].map((e,i) => `
+                <button class="emoji-picker-btn ${i===0?'selected':''}" data-emoji="${e}"
+                  style="font-size:22px;padding:6px;border:2px solid ${i===0?'var(--accent)':'var(--border)'};border-radius:8px;background:transparent;cursor:pointer;transition:all 0.12s;">
                   ${e}
                 </button>
               `).join('')}
@@ -250,82 +301,63 @@ function showNewProjectWizard(container: HTMLElement, category = 'Livros'): void
   `
 
   document.body.appendChild(overlay)
-
   let selectedEmoji = '📖'
 
-  // Radio buttons for category
   overlay.querySelectorAll('.wizard-radio').forEach(el => {
     el.addEventListener('click', () => {
       overlay.querySelectorAll('.wizard-radio').forEach(r => r.classList.remove('selected'))
       el.classList.add('selected')
-      const input = el.closest('label')!.querySelector('input[type="radio"]') as HTMLInputElement
-      input.checked = true
+      ;(el.closest('label')!.querySelector('input[type="radio"]') as HTMLInputElement).checked = true
     })
   })
 
-  // Emoji picker
   overlay.querySelectorAll('.emoji-picker-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       overlay.querySelectorAll('.emoji-picker-btn').forEach(b => {
-        b.classList.remove('selected');
-        (b as HTMLElement).style.borderColor = 'var(--border)'
+        b.classList.remove('selected');(b as HTMLElement).style.borderColor = 'var(--border)'
       })
-      btn.classList.add('selected');
-      (btn as HTMLElement).style.borderColor = 'var(--accent)'
+      btn.classList.add('selected');(btn as HTMLElement).style.borderColor = 'var(--accent)'
       selectedEmoji = (btn as HTMLElement).dataset.emoji ?? '📖'
     })
   })
-  // Init first emoji button
-  const firstEmoji = overlay.querySelector('.emoji-picker-btn.selected') as HTMLElement
-  if (firstEmoji) firstEmoji.style.borderColor = 'var(--accent)'
 
-  // Close
   overlay.querySelector('.modal-close')!.addEventListener('click', () => overlay.remove())
   overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove() })
 
-  // Step navigation
   overlay.querySelector('#wizard-next')!.addEventListener('click', () => {
     const title = (overlay.querySelector('#proj-title') as HTMLInputElement).value.trim()
     if (!title) {
       const err = overlay.querySelector('#wizard-error') as HTMLElement
-      err.textContent = 'O título é obrigatório.'
-      err.style.display = 'block'
-      return
+      err.textContent = 'O título é obrigatório.'; err.style.display = 'block'; return
     }
-    overlay.querySelector('#wizard-error')!.setAttribute('style', 'display:none')
-    overlay.querySelector('#wizard-step-1')!.setAttribute('style', 'display:none')
+    overlay.querySelector('#wizard-error')!.setAttribute('style','display:none')
+    overlay.querySelector('#wizard-step-1')!.setAttribute('style','display:none')
     overlay.querySelector('#wizard-step-2')!.removeAttribute('style')
-    overlay.querySelectorAll('.wizard-step')[1].setAttribute('style',
-      'flex:1;height:3px;background:var(--accent);border-radius:3px;')
+    overlay.querySelectorAll('.wizard-step')[1].setAttribute('style','flex:1;height:3px;background:var(--accent);border-radius:3px;')
   })
 
   overlay.querySelector('#wizard-back')!.addEventListener('click', () => {
-    overlay.querySelector('#wizard-step-2')!.setAttribute('style', 'display:none')
+    overlay.querySelector('#wizard-step-2')!.setAttribute('style','display:none')
     overlay.querySelector('#wizard-step-1')!.removeAttribute('style')
-    overlay.querySelectorAll('.wizard-step')[1].setAttribute('style',
-      'flex:1;height:3px;background:var(--surface-2);border-radius:3px;transition:background 0.2s;')
+    overlay.querySelectorAll('.wizard-step')[1].setAttribute('style','flex:1;height:3px;background:var(--surface-2);border-radius:3px;transition:background 0.2s;')
   })
 
   overlay.querySelector('#wizard-create')!.addEventListener('click', async () => {
     const btn = overlay.querySelector('#wizard-create') as HTMLButtonElement
-    btn.textContent = 'Criando...'
-    btn.disabled = true
+    btn.textContent = 'Criando…'; btn.disabled = true
 
-    const title    = (overlay.querySelector('#proj-title') as HTMLInputElement).value.trim()
+    const title    = (overlay.querySelector('#proj-title')    as HTMLInputElement).value.trim()
     const subtitle = (overlay.querySelector('#proj-subtitle') as HTMLInputElement).value.trim()
     const category = (overlay.querySelector('input[name="proj-category"]:checked') as HTMLInputElement).value as 'Livros' | 'Acadêmico' | 'Outros'
-    const genre    = (overlay.querySelector('#proj-genre') as HTMLSelectElement).value
-    const desc     = (overlay.querySelector('#proj-desc') as HTMLTextAreaElement).value.trim()
-    const lang     = (overlay.querySelector('#proj-lang') as HTMLSelectElement).value
-    const wordGoal = parseInt((overlay.querySelector('#proj-words') as HTMLInputElement).value) || undefined
+    const genre    = (overlay.querySelector('#proj-genre')    as HTMLSelectElement).value
+    const desc     = (overlay.querySelector('#proj-desc')     as HTMLTextAreaElement).value.trim()
+    const lang     = (overlay.querySelector('#proj-lang')     as HTMLSelectElement).value
+    const wordGoal = parseInt((overlay.querySelector('#proj-words')    as HTMLInputElement).value) || undefined
     const chapGoal = parseInt((overlay.querySelector('#proj-chapters') as HTMLInputElement).value) || undefined
 
     try {
       const project = await createProject({
-        title,
-        subtitle:               subtitle || null,
-        description:            desc || null,
-        category,
+        title, subtitle: subtitle || null, description: desc || null, category,
         project_type:           category === 'Livros' ? 'book' : category === 'Acadêmico' ? 'academic' : 'other',
         cover_emoji:            selectedEmoji,
         cover_gradient:         'linear-gradient(135deg,#6B5FE4,#9B8FF8)',
@@ -339,15 +371,12 @@ function showNewProjectWizard(container: HTMLElement, category = 'Livros'): void
         sort_order:             0,
         metadata:               {},
       })
-
       overlay.remove()
       openProject(project)
-    } catch (err) {
+    } catch {
       const errEl = overlay.querySelector('#wizard-error') as HTMLElement
-      errEl.textContent = 'Erro ao criar projeto. Tente novamente.'
-      errEl.style.display = 'block'
-      btn.textContent = 'Criar Projeto ✓'
-      btn.disabled = false
+      errEl.textContent = 'Erro ao criar projeto. Tente novamente.'; errEl.style.display = 'block'
+      btn.textContent = 'Criar Projeto ✓'; btn.disabled = false
     }
   })
 }
