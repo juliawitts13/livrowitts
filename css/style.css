@@ -157,3 +157,22 @@ body{font-family:var(--f);background:var(--bg);color:var(--tx);display:flex;font
 .char-list-item.on{background:var(--acb);border-color:var(--ac)}
 
 @media(max-width:900px){.sg{grid-template-columns:repeat(2,1fr)}.tc{grid-template-columns:1fr}.lg{grid-template-columns:repeat(2,1fr)}.chl2{grid-template-columns:1fr;height:auto}}
+
+/* ─── Página de Escrita ─── */
+.write-mode{display:none;position:absolute;inset:0;z-index:20;background:var(--bg);flex-direction:column}
+.write-mode.on{display:flex}
+.write-top{padding:14px 26px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:16px;background:var(--sur);flex-shrink:0}
+.write-title{flex:1;min-width:0;text-align:center}
+.write-title-main{font-size:14px;font-weight:700;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.write-title-sub{font-size:11px;color:var(--tx3);display:flex;gap:10px;justify-content:center}
+.write-scroll{flex:1;overflow-y:auto;display:flex;justify-content:center}
+.write-area{width:100%;max-width:760px;min-height:100%;padding:48px 40px 120px;border:none;outline:none;resize:none;background:transparent;color:var(--tx);font-family:Georgia,'Times New Roman',serif;font-size:17px;line-height:1.9}
+@media(max-width:700px){.write-area{padding:24px 18px 80px;font-size:16px}}
+
+/* ─── Marcação de falas ─── */
+.write-toolbar{padding:8px 26px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:8px;background:var(--sur);flex-shrink:0;flex-wrap:wrap}
+.fala-sel{padding:5px 8px;border-radius:8px;border:1px solid var(--bds);background:var(--sur);color:var(--tx);font-size:12px;font-family:var(--f);max-width:200px}
+.fala-btn{padding:5px 10px;font-size:12px}
+.write-area[contenteditable]{white-space:pre-wrap;overflow-wrap:break-word;cursor:text}
+.write-area[contenteditable]:empty::before{content:attr(data-placeholder);color:var(--tx3)}
+.fala{border-radius:4px;padding:1px 3px;border-bottom:2px solid var(--fc,#6B5FE4);background:color-mix(in srgb,var(--fc,#6B5FE4) 14%,transparent);cursor:help}

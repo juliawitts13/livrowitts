@@ -194,6 +194,168 @@ function openCap(el, ch) {
   setEl('ch-save-status', '');
 }
 
+// ─── PÁGINA DE ESCRITA ──────────────────────────────────────────────────────
+var writeSaveTimer = null;
+var writeDirty = false;
+
+function countWords(txt) {
+  var m = (txt || '').trim().match(/\S+/g);
+  return m ? m.length : 0;
+}
+
+var FALA_COLORS = ['#6B5FE4','#C84B31','#1D7A4A','#C2851A','#4A90D9','#7B4FA0','#B03A5B','#2E8B8B'];
+
+function falaColor(charId) {
+  var idx = allChars.findIndex(function(c){ return String(c.id) === String(charId); });
+  return FALA_COLORS[(idx >= 0 ? idx : 0) % FALA_COLORS.length];
+}
+
+function escHtml(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function fillFalaSelect() {
+  var sel = document.getElementById('fala-char-sel');
+  if (!sel) return;
+  sel.innerHTML = allChars.map(function(c) {
+    return '<option value="' + c.id + '">' + escHtml(c.name) + '</option>';
+  }).join('') || '<option value="">Nenhum personagem</option>';
+}
+
+function openWriting() {
+  if (!currentChapter) { alert('Selecione um capítulo primeiro.'); return; }
+  var wm = document.getElementById('write-mode');
+  var ta = document.getElementById('write-area');
+  var lbl = currentChapter.chapter_label || ('Cap. ' + currentChapter.chapter_number);
+  setEl('write-title', lbl + ' — ' + currentChapter.title);
+
+  var content = currentChapter.content || '';
+  if (/<(span|div|br|p)\b/i.test(content)) {
+    ta.innerHTML = content;
+  } else {
+    ta.innerHTML = escHtml(content).replace(/\n/g, '<br>');
+  }
+
+  if (allChars.length) fillFalaSelect();
+  else loadCharacters().then(fillFalaSelect);
+
+  writeDirty = false;
+  updateWriteWords();
+  setEl('write-save-status', '');
+  setEl('fala-hint', '');
+  wm.classList.add('on');
+  ta.focus();
+}
+
+function markFala() {
+  var ta   = document.getElementById('write-area');
+  var sel  = document.getElementById('fala-char-sel');
+  var hint = document.getElementById('fala-hint');
+  var charId = sel ? sel.value : '';
+  if (!charId) { hint.textContent = 'Cadastre um personagem primeiro.'; return; }
+
+  var s = window.getSelection();
+  if (!s.rangeCount || s.isCollapsed) { hint.textContent = 'Selecione um trecho do texto primeiro.'; return; }
+  var range = s.getRangeAt(0);
+  if (!ta.contains(range.commonAncestorContainer)) { hint.textContent = 'A seleção precisa estar dentro do texto.'; return; }
+
+  var ch = allChars.find(function(c){ return String(c.id) === String(charId); });
+  var span = document.createElement('span');
+  span.className = 'fala';
+  span.setAttribute('data-char-id', charId);
+  span.setAttribute('title', 'Fala: ' + (ch ? ch.name : ''));
+  span.style.setProperty('--fc', falaColor(charId));
+
+  try {
+    span.appendChild(range.extractContents());
+    range.insertNode(span);
+  } catch (e) {
+    hint.textContent = 'Não foi possível marcar essa seleção.';
+    return;
+  }
+  s.removeAllRanges();
+  hint.textContent = '✓ Fala de ' + (ch ? ch.name : '') + ' marcada';
+  setTimeout(function(){ if (hint.textContent.indexOf('✓') === 0) hint.textContent = ''; }, 3000);
+  onWriteInput();
+}
+
+function unmarkFala() {
+  var ta   = document.getElementById('write-area');
+  var hint = document.getElementById('fala-hint');
+  var s = window.getSelection();
+  if (!s.rangeCount) { hint.textContent = 'Clique dentro de uma fala marcada.'; return; }
+
+  var node = s.getRangeAt(0).commonAncestorContainer;
+  if (node.nodeType === 3) node = node.parentNode;
+  var span = node.closest ? node.closest('.fala') : null;
+  if (!span || !ta.contains(span)) {
+    // também remove todas as falas dentro da seleção, se houver
+    var range = s.getRangeAt(0);
+    var removed = 0;
+    ta.querySelectorAll('.fala').forEach(function(f) {
+      if (range.intersectsNode(f)) { unwrapNode(f); removed++; }
+    });
+    hint.textContent = removed ? '✓ Marcação removida' : 'Clique dentro de uma fala marcada.';
+    if (removed) onWriteInput();
+    return;
+  }
+  unwrapNode(span);
+  hint.textContent = '✓ Marcação removida';
+  onWriteInput();
+}
+
+function unwrapNode(el) {
+  var parent = el.parentNode;
+  while (el.firstChild) parent.insertBefore(el.firstChild, el);
+  parent.removeChild(el);
+}
+
+function closeWriting() {
+  if (writeDirty) saveWriting();
+  document.getElementById('write-mode').classList.remove('on');
+}
+
+function updateWriteWords() {
+  var ta = document.getElementById('write-area');
+  setEl('write-words', countWords(ta.innerText).toLocaleString('pt-BR') + ' palavras');
+}
+
+function onWriteInput() {
+  writeDirty = true;
+  updateWriteWords();
+  var st = document.getElementById('write-save-status');
+  if (st) { st.textContent = '· editando...'; st.style.color = 'var(--tx3)'; }
+  clearTimeout(writeSaveTimer);
+  writeSaveTimer = setTimeout(saveWriting, 2500);
+}
+
+function saveWriting() {
+  if (!currentChapter) return;
+  clearTimeout(writeSaveTimer);
+  var ta = document.getElementById('write-area');
+  var st = document.getElementById('write-save-status');
+  var content = ta.innerHTML;
+  var words = countWords(ta.innerText);
+
+  if (st) { st.textContent = '· salvando...'; st.style.color = 'var(--tx3)'; }
+
+  sbPatch('chapters', 'id=eq.' + currentChapter.id, {
+    content: content,
+    word_count: words,
+    updated_at: new Date().toISOString()
+  })
+  .then(function() {
+    writeDirty = false;
+    currentChapter.content = content;
+    currentChapter.word_count = words;
+    if (st) { st.textContent = '✓ salvo'; st.style.color = 'var(--ac)'; }
+    setEl('ch-words-disp', words.toLocaleString('pt-BR') + ' palavras');
+  })
+  .catch(function(e) {
+    if (st) { st.textContent = '✗ erro: ' + e.message; st.style.color = '#C62828'; }
+  });
+}
+
 function updateChapterStatus() {
   if (!currentChapter) return;
   var sel = document.getElementById('ch-status-sel');
@@ -785,6 +947,51 @@ function loadStats() {
       });
     })
     .catch(function(e){ console.error('chapter_characters error', e); });
+
+  loadDialogueStats();
+}
+
+function loadDialogueStats() {
+  var box = document.getElementById('st-dialogues');
+  var emptyBox = document.getElementById('st-dialogues-empty');
+  if (!box) return;
+
+  var run = function() {
+    var stats = {}; // charId -> { falas, words }
+    var tmp = document.createElement('div');
+    allChapters.forEach(function(ch) {
+      if (!ch.content || ch.content.indexOf('class="fala"') === -1) return;
+      tmp.innerHTML = ch.content;
+      tmp.querySelectorAll('.fala[data-char-id]').forEach(function(f) {
+        var id = f.getAttribute('data-char-id');
+        if (!stats[id]) stats[id] = { falas: 0, words: 0 };
+        stats[id].falas++;
+        stats[id].words += countWords(f.textContent);
+      });
+    });
+    tmp.innerHTML = '';
+
+    var entries = Object.keys(stats).map(function(id) {
+      return { id: id, name: charNameById(id), falas: stats[id].falas, words: stats[id].words, color: falaColor(id) };
+    }).sort(function(a,b){ return b.words - a.words; });
+
+    if (!entries.length) { box.innerHTML = ''; emptyBox.style.display = 'block'; return; }
+    emptyBox.style.display = 'none';
+
+    var max = entries[0].words || 1;
+    box.innerHTML = '';
+    entries.forEach(function(e) {
+      var pct = Math.max(4, Math.round((e.words/max)*100));
+      var row = document.createElement('div');
+      row.innerHTML = '<div class="pm"><span class="pn">' + escHtml(e.name) + '</span><span class="pp">' +
+                       e.falas + ' falas · ' + e.words.toLocaleString('pt-BR') + ' palavras</span></div>' +
+                       '<div class="pb"><div class="pf" style="width:' + pct + '%;background:' + e.color + '"></div></div>';
+      box.appendChild(row);
+    });
+  };
+
+  if (allChars.length) run();
+  else loadCharacters().then(run);
 }
 
 function buildChart() {
