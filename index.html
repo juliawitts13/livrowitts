@@ -167,8 +167,15 @@
       </div>
       <button class="btn p" onclick="saveWriting()">Salvar</button>
     </div>
+    <div class="write-toolbar">
+      <span style="font-size:11px;color:var(--tx3)">Falas:</span>
+      <select id="fala-char-sel" class="fala-sel" title="Personagem da fala"></select>
+      <button class="btn fala-btn" onclick="markFala()" title="Selecione um trecho do texto e clique para marcar como fala do personagem escolhido">🗣 Marcar fala</button>
+      <button class="btn fala-btn" onclick="unmarkFala()" title="Remove a marcação de fala do trecho selecionado">✕ Desmarcar</button>
+      <span id="fala-hint" style="font-size:11px;color:var(--tx3)"></span>
+    </div>
     <div class="write-scroll">
-      <textarea id="write-area" class="write-area" placeholder="Comece a escrever seu capítulo aqui..." oninput="onWriteInput()" spellcheck="true"></textarea>
+      <div id="write-area" class="write-area" contenteditable="true" oninput="onWriteInput()" spellcheck="true" data-placeholder="Comece a escrever seu capítulo aqui..."></div>
     </div>
   </div>
 </div>
@@ -457,6 +464,12 @@
         <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px" id="st-char-appearances"></div>
         <div id="st-char-appearances-empty" style="display:none;color:var(--tx3);font-size:12px;padding:8px 0">Ainda não há capítulos vinculados a personagens (tabela chapter_characters vazia). Vincule personagens aos capítulos para ver este gráfico.</div>
       </div>
+    </div>
+    <div class="cd" style="margin-top:24px">
+      <div class="stt">🗣 Falas por personagem</div>
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:12px">Baseado nos trechos marcados como fala na página de Escrita dos capítulos.</div>
+      <div style="display:flex;flex-direction:column;gap:10px" id="st-dialogues"></div>
+      <div id="st-dialogues-empty" style="display:none;color:var(--tx3);font-size:12px;padding:8px 0">Nenhuma fala marcada ainda. Abra um capítulo na página de Escrita, selecione um trecho de diálogo e use "🗣 Marcar fala".</div>
     </div>
   </div>
 </div>
