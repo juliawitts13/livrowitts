@@ -163,8 +163,6 @@ function openCap(el, ch) {
   if (el) el.classList.add('on');
   currentChapter = ch;
 
-  var gdocId  = ch.gdoc_id || '';
-  var gdocUrl = gdocId ? 'https://docs.google.com/document/d/' + gdocId + '/edit' : '#';
   var st = statusInfo(ch.status);
 
   var ti = document.getElementById('etit');
@@ -173,15 +171,9 @@ function openCap(el, ch) {
   var bd = document.getElementById('ebdg');
   if (bd) { bd.textContent = st.label; bd.className = 'ck ' + st.cls; bd.style.display = 'inline-flex'; }
 
-  var ob = document.getElementById('gdoc-btn');
-  if (ob) { ob.href = gdocUrl; ob.style.display = gdocId ? 'inline-flex' : 'none'; }
-
   document.getElementById('ee').style.display         = 'none';
   document.getElementById('ch-detail').style.display  = 'flex';
   document.getElementById('ch-detail').style.flexDirection = 'column';
-
-  var link = document.getElementById('ch-gdoc-link');
-  if (link) link.href = gdocUrl;
 
   var words   = (ch.word_count || 0).toLocaleString('pt-BR');
   var edited  = ch.updated_at ? new Date(ch.updated_at).toLocaleDateString('pt-BR', {day:'2-digit',month:'short',year:'numeric'}) : '—';
@@ -853,69 +845,6 @@ function renderDashboardTimeline() {
     div.innerHTML = '<div class="tld' + (ev.is_future?' s':'') + '"></div><div class="tldt">' + (ev.in_world_date||'') + '</div><div class="tltl">' + (ev.title||'') + '</div>';
     box.appendChild(div);
   });
-}
-
-// ─── SINCRONIZAR DRIVE ─────────────────────────────────────────────────────
-var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzT9LbOCIXXNFEUFKZgpRf5Wct_hcBaCi0gXIGsvST4uvLBFdtab-rD7YC2SnJd1AkkIA/exec';
-
-function syncDrive() {
-  var btn  = document.getElementById('sync-btn');
-  var icon = document.getElementById('sync-icon');
-  if (btn)  btn.disabled = true;
-  if (icon) icon.textContent = '⏳';
-  setDriveStatus('Sincronizando com Google Drive...');
-
-  fetch(APPS_SCRIPT_URL)
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (!data || !data.ok) throw new Error(data ? data.error : 'sem resposta');
-
-      var updates = data.chapters || [];
-      if (updates.length === 0) { afterSync(data); return; }
-
-      var promises = updates.map(function(ch) {
-        return sbPatch('chapters', 'gdoc_id=eq.' + ch.gdoc_id, {
-          word_count: ch.words,
-          updated_at: new Date().toISOString()
-        });
-      });
-
-      return Promise.all(promises).then(function() { afterSync(data); });
-    })
-    .catch(function(err) {
-      console.error('Sync error:', err);
-      if ((err.message && err.message.indexOf('fetch') !== -1) || err instanceof TypeError) {
-        setDriveStatus('Hospede o site no GitHub Pages para sincronizar.');
-        showSyncHelp();
-      } else {
-        setDriveStatus('Erro: ' + err.message);
-      }
-      if (btn)  btn.disabled = false;
-      if (icon) icon.textContent = '🔄';
-    });
-}
-
-function afterSync(data) {
-  var btn  = document.getElementById('sync-btn');
-  var icon = document.getElementById('sync-icon');
-  if (btn)  btn.disabled = false;
-  if (icon) icon.textContent = '✅';
-  setDriveStatus('Drive sincronizado — ' + (data.synced || 0) + ' capítulos atualizados');
-  setTimeout(function() {
-    if (icon) icon.textContent = '🔄';
-    setDriveStatus('');
-  }, 4000);
-  loadChapters();
-}
-
-function setDriveStatus(msg) {
-  var el = document.getElementById('cap-sub');
-  if (el) el.textContent = msg || (allChapters.length + ' capítulos · Google Drive');
-}
-
-function showSyncHelp() {
-  var el = document.getElementById('sync-help');
-  if (el) el.style.display = 'flex';
 }
 
 // ─── NAVEGAÇÃO ──────────────────────────────────────────────────────────────
