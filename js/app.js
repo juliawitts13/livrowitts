@@ -116,6 +116,7 @@ function loadChapters() {
       list.innerHTML = '';
       var total = rows.reduce(function(s,r){ return s + (r.word_count||0); }, 0);
       document.querySelectorAll('.stat-total-w').forEach(function(el){ el.textContent = total.toLocaleString('pt-BR'); });
+      renderWordGoal();
       document.querySelectorAll('.stat-total-c').forEach(function(el){ el.textContent = rows.length; });
       setEl('ch-count-badge', rows.length);
 
@@ -1231,6 +1232,65 @@ function buildChart() {
   });
 }
 
+// ─── PROGRESSO DA OBRA (meta de palavras) ───────────────────────────────────
+var projectMeta = null;
+
+function loadProjectMeta() {
+  return sbFetch('projects?id=eq.' + PID + '&select=target_word_count,total_chapters_planned')
+    .then(function(rows) {
+      projectMeta = (rows && rows[0]) || {};
+      renderWordGoal();
+    })
+    .catch(function(e){ console.error('project meta', e); });
+}
+
+function renderWordGoal() {
+  var bar = document.getElementById('goal-bar');
+  if (!bar) return;
+
+  var total = allChapters.reduce(function(s,c){ return s + (c.word_count||0); }, 0);
+  var goal  = (projectMeta && projectMeta.target_word_count) || 0;
+
+  if (!goal) {
+    setEl('goal-pct', '—');
+    bar.style.width = '0%';
+    setEl('goal-detail', 'Nenhuma meta definida. Clique em "Editar meta" para escolher quantas palavras o livro deve ter.');
+    setEl('goal-chapters', '');
+    return;
+  }
+
+  var pct = Math.min(100, Math.round((total / goal) * 100));
+  setEl('goal-pct', pct + '%');
+  bar.style.width = pct + '%';
+  setEl('goal-label', 'Meta de ' + goal.toLocaleString('pt-BR') + ' palavras');
+
+  var falta = Math.max(0, goal - total);
+  setEl('goal-detail', total.toLocaleString('pt-BR') + ' escritas · ' +
+    (falta ? 'faltam ' + falta.toLocaleString('pt-BR') : 'meta alcançada 🎉'));
+
+  var planned = projectMeta.total_chapters_planned || 0;
+  var done = allChapters.filter(function(c){ return c.status === 'done'; }).length;
+  setEl('goal-chapters', planned
+    ? '📚 ' + allChapters.length + ' de ' + planned + ' capítulos criados · ' + done + ' finalizados'
+    : '📚 ' + allChapters.length + ' capítulos · ' + done + ' finalizados');
+}
+
+function editWordGoal() {
+  var atual = (projectMeta && projectMeta.target_word_count) || 80000;
+  var v = prompt('Meta de palavras para o livro inteiro:', atual);
+  if (v === null) return;
+  var goal = parseInt(String(v).replace(/\D/g,'')) || 0;
+  if (!goal) { alert('Informe um número de palavras.'); return; }
+
+  sbPatch('projects', 'id=eq.' + PID, { target_word_count: goal })
+    .then(function() {
+      if (!projectMeta) projectMeta = {};
+      projectMeta.target_word_count = goal;
+      renderWordGoal();
+    })
+    .catch(function(e){ alert('Erro ao salvar a meta: ' + e.message); });
+}
+
 // ─── DASHBOARD (auxiliares) ─────────────────────────────────────────────────
 function renderDashboardChars() {
   var box = document.getElementById('dash-active-chars');
@@ -1863,6 +1923,7 @@ document.addEventListener('DOMContentLoaded', function() {
   var btn = document.getElementById('tbtn');
   if (btn) btn.textContent = dk ? '☀️' : '🌙';
 
+  loadProjectMeta();
   loadChapters();
   loadIdeas();
   loadCharacters().then(function(){ loadLocations(); loadTimeline(); locationsLoaded = true; timelineLoaded = true; });
