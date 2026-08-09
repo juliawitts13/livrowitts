@@ -4,13 +4,21 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Story OS — 2030 · Júlia Witts</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237FB069'/%3E%3Cstop offset='1' stop-color='%2314524A'/%3E%3C/linearGradient%3E%3CclipPath id='c'%3E%3Cpath d='M56 8 C50 40 40 51 9 57 C15 26 26 14 56 8 Z'/%3E%3C/clipPath%3E%3C/defs%3E%3Cpath d='M56 8 C50 40 40 51 9 57 C15 26 26 14 56 8 Z' fill='url(%23g)'/%3E%3Cg clip-path='url(%23c)' stroke='%23FAF6EC' stroke-width='3' stroke-linecap='round' opacity='.9'%3E%3Cline x1='18' y1='22' x2='48' y2='22'/%3E%3Cline x1='15' y1='30' x2='46' y2='30'/%3E%3Cline x1='13' y1='38' x2='40' y2='38'/%3E%3C/g%3E%3C/svg%3E"/>
 <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
 
 <aside class="sb">
   <div class="sb-logo">
-    <div class="lm">S</div>
+    <svg class="lm" viewBox="0 0 64 64" role="img" aria-label="Story OS">
+      <defs><clipPath id="lgc-sb"><path d="M56 8 C50 40 40 51 9 57 C15 26 26 14 56 8 Z"/></clipPath></defs>
+      <path d="M56 8 C50 40 40 51 9 57 C15 26 26 14 56 8 Z" fill="#7FB069"/>
+      <g clip-path="url(#lgc-sb)" stroke="#123F31" stroke-width="3" stroke-linecap="round" opacity=".72">
+        <line x1="18" y1="22" x2="48" y2="22"/><line x1="15" y1="30" x2="46" y2="30"/>
+        <line x1="13" y1="38" x2="40" y2="38"/><line x1="11" y1="46" x2="31" y2="46"/>
+      </g>
+    </svg>
     <div><div class="lt">Story OS</div><div class="ls">Workspace do Escritor</div></div>
   </div>
   <div class="bk">
@@ -41,7 +49,15 @@
 
 <div class="m-head">
   <button class="mh-btn" onclick="toggleSb(true)">☰</button>
-  <div class="mh-logo"><div class="lm" style="width:24px;height:24px;font-size:11px">S</div><span>Story OS</span></div>
+  <div class="mh-logo">
+    <svg class="lm" style="width:26px;height:26px" viewBox="0 0 64 64" role="img" aria-label="Story OS">
+      <defs><clipPath id="lgc-mh"><path d="M56 8 C50 40 40 51 9 57 C15 26 26 14 56 8 Z"/></clipPath></defs>
+      <path d="M56 8 C50 40 40 51 9 57 C15 26 26 14 56 8 Z" fill="#7FB069"/>
+      <g clip-path="url(#lgc-mh)" stroke="#123F31" stroke-width="3.4" stroke-linecap="round" opacity=".72">
+        <line x1="18" y1="22" x2="48" y2="22"/><line x1="15" y1="30" x2="46" y2="30"/>
+        <line x1="13" y1="38" x2="40" y2="38"/>
+      </g>
+    </svg><span>Story OS</span></div>
   <button class="mh-btn" onclick="dark()">🌙</button>
 </div>
 <div class="sb-ov" id="sb-ov" onclick="toggleSb(false)"></div>

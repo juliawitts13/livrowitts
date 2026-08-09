@@ -28,7 +28,7 @@ body{font-family:var(--f);background:var(--bg);color:var(--tx);display:flex;font
 .sb{width:var(--sw);background:linear-gradient(178deg,var(--forest1),var(--forest2));display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;position:relative}
 .sb::after{content:'';position:absolute;bottom:0;left:0;width:190px;height:190px;pointer-events:none;opacity:.1;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cpath d='M100 190 C 40 150, 20 90, 60 30 C 80 70, 90 110, 100 190 Z' fill='%23D7EAD9'/%3E%3Cpath d='M110 190 C 150 140, 180 100, 150 40 C 130 80, 118 120, 110 190 Z' fill='%23D7EAD9'/%3E%3C/svg%3E") no-repeat bottom left/contain}
 .sb-logo{padding:18px 16px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(215,234,217,.14);position:relative;z-index:1}
-.lm{width:32px;height:32px;background:linear-gradient(135deg,var(--sprout),var(--leaf));border-radius:10px 10px 10px 3px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:800;flex-shrink:0}
+.lm{width:34px;height:34px;flex-shrink:0;display:block}
 .lt{font-size:14px;font-weight:800;color:#F2F8EE}
 .ls{font-size:10px;color:var(--side-tx);text-transform:uppercase;letter-spacing:.4px;opacity:.8}
 .bk{margin:12px 10px 4px;padding:8px 10px;background:rgba(215,234,217,.1);border-radius:10px 10px 10px 3px;display:flex;align-items:center;justify-content:space-between;border:1px solid rgba(215,234,217,.14);position:relative;z-index:1}
@@ -270,7 +270,6 @@ body{font-family:var(--f);background:var(--bg);color:var(--tx);display:flex;font
   .write-page{margin:12px 12px 40px;padding:24px 18px;width:auto}
   .write-page::before{right:10px;width:64px}
   .chstat-grid{grid-template-columns:1fr 1fr}
-  .m-head .lm{border-radius:8px 8px 8px 2px}
 }
 
 /* ─── Linha do Tempo visual ─── */
