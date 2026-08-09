@@ -893,24 +893,31 @@ function renderTimelineList(events) {
     div.className = 'tle' + (ev.is_highlight ? ' hl' : '') + (ev.is_future ? ' fut' : '');
     div.id = 'time-item-' + ev.id;
 
-    var hoverPic = (ev.photos && ev.photos.length)
-      ? '<div class="tle-hoverpic"><img src="' + String(ev.photos[0]).replace(/"/g,'&quot;') + '" loading="lazy"/>' +
+    var thumb = (ev.photos && ev.photos.length)
+      ? '<div class="tle-thumb"><img src="' + String(ev.photos[0]).replace(/"/g,'&quot;') + '" loading="lazy" title="Clique para ampliar"/>' +
         (ev.photos.length > 1 ? '<span class="more">+' + (ev.photos.length - 1) + '</span>' : '') + '</div>'
       : '';
 
     div.innerHTML =
       '<div class="tle-dot"></div>' +
       '<div class="tle-card" title="Clique para editar">' +
-        hoverPic +
-        '<div class="tle-date"><span>' + (ev.is_highlight ? '⚡ ' : '') + escHtml(ev.in_world_date || 'sem data') + '</span><span class="tle-ord">#' + (i+1) + '</span>' +
-        (ev.photos && ev.photos.length ? '<span class="tle-pin">📷</span>' : '') + '</div>' +
-        '<div class="tle-title">' + escHtml(ev.title || '') + '</div>' +
-        (ev.description ? '<div class="tle-desc">' + escHtml(ev.description) + '</div>' : '') +
+        thumb +
+        '<div class="tle-body">' +
+          '<div class="tle-date"><span>' + (ev.is_highlight ? '⚡ ' : '') + escHtml(ev.in_world_date || 'sem data') + '</span><span class="tle-ord">#' + (i+1) + '</span></div>' +
+          '<div class="tle-title">' + escHtml(ev.title || '') + '</div>' +
+          (ev.description ? '<div class="tle-desc">' + escHtml(ev.description) + '</div>' : '') +
+        '</div>' +
         '<div class="tle-actions">' +
           '<button class="tle-mv" data-dir="-1" title="Mover para cima">↑</button>' +
           '<button class="tle-mv" data-dir="1" title="Mover para baixo">↓</button>' +
         '</div>' +
       '</div>';
+
+    var thumbImg = div.querySelector('.tle-thumb img');
+    if (thumbImg) thumbImg.addEventListener('click', function(evt) {
+      evt.stopPropagation();
+      openLightbox(ev.photos[0]);
+    });
 
     (function(e, idx) {
       div.querySelector('.tle-card').addEventListener('click', function(evt) {

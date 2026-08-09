@@ -281,8 +281,13 @@ body{font-family:var(--f);background:var(--bg);color:var(--tx);display:flex;font
 .tle:nth-child(even) .tle-dot{right:auto;left:-8px}
 .tle.hl .tle-dot{background:var(--sun);box-shadow:0 0 0 2px var(--sun)}
 .tle.fut .tle-dot{background:var(--bg);box-shadow:0 0 0 2px var(--bds)}
-.tle-card{position:relative;background:var(--sur);border:1px solid var(--bd);border-radius:14px 14px 14px 4px;padding:13px 16px;cursor:pointer;transition:all .15s;text-align:right}
+.tle-card{position:relative;background:var(--sur);border:1px solid var(--bd);border-radius:14px 14px 14px 4px;padding:12px 14px;cursor:pointer;transition:all .15s;text-align:right;display:flex;gap:12px;align-items:flex-start}
 .tle:nth-child(even) .tle-card{text-align:left}
+.tle-body{flex:1;min-width:0}
+.tle-thumb{width:96px;flex-shrink:0;position:relative;border-radius:10px 10px 10px 3px;overflow:hidden;border:2px solid var(--ink);order:-1}
+.tle:nth-child(even) .tle-thumb{order:1}
+.tle-thumb img{width:100%;height:72px;object-fit:cover;display:block;cursor:zoom-in}
+.tle-thumb .more{position:absolute;bottom:4px;right:4px;background:rgba(31,51,40,.78);color:#fff;font-size:9px;font-weight:700;border-radius:20px;padding:1px 7px}
 .tle-card:hover{border-color:var(--leaf);box-shadow:3px 3px 0 var(--off);transform:translateY(-1px)}
 .tle.hl .tle-card{border-color:var(--sun)}
 .tle.fut .tle-card{border-style:dashed;opacity:.72}
@@ -299,21 +304,21 @@ body{font-family:var(--f);background:var(--bg);color:var(--tx);display:flex;font
 .tle-card:hover .tle-actions{opacity:1}
 .tle-mv{width:24px;height:24px;border-radius:50%;border:1px solid var(--bds);background:var(--sur);color:var(--tx2);font-size:11px;cursor:pointer;line-height:1}
 .tle-mv:hover{background:var(--acb);color:var(--ac);border-color:var(--leaf)}
-.tle-hoverpic{display:none;position:absolute;bottom:calc(100% + 10px);z-index:30;pointer-events:none;filter:drop-shadow(0 8px 24px rgba(10,20,16,.35))}
-.tle .tle-hoverpic{right:0}
-.tle:nth-child(even) .tle-hoverpic{right:auto;left:0}
-.tle-card:hover .tle-hoverpic{display:block}
-.tle-hoverpic img{width:220px;max-height:160px;object-fit:cover;border-radius:12px 12px 12px 4px;border:2px solid var(--ink);display:block}
-.tle-hoverpic .more{position:absolute;bottom:6px;right:6px;background:rgba(31,51,40,.75);color:#fff;font-size:10px;font-weight:700;border-radius:20px;padding:2px 8px}
 @media(max-width:760px){
   .tl-flow{padding-left:26px;max-width:none}
   .tl-flow::before{left:9px;margin-left:0}
   .tle,.tle:nth-child(even){width:100%;margin-left:0;padding:0 0 0 22px}
   .tle-dot,.tle:nth-child(even) .tle-dot{left:-24px;right:auto}
   .tle-card,.tle:nth-child(even) .tle-card{text-align:left}
+.tle-body{flex:1;min-width:0}
+.tle-thumb{width:96px;flex-shrink:0;position:relative;border-radius:10px 10px 10px 3px;overflow:hidden;border:2px solid var(--ink);order:-1}
+.tle:nth-child(even) .tle-thumb{order:1}
+.tle-thumb img{width:100%;height:72px;object-fit:cover;display:block;cursor:zoom-in}
+.tle-thumb .more{position:absolute;bottom:4px;right:4px;background:rgba(31,51,40,.78);color:#fff;font-size:9px;font-weight:700;border-radius:20px;padding:1px 7px}
   .tle-date,.tle:nth-child(even) .tle-date{justify-content:flex-start}
   .tle .tle-actions,.tle:nth-child(even) .tle-actions{left:auto;right:8px;opacity:1}
-  .tle .tle-hoverpic,.tle:nth-child(even) .tle-hoverpic{left:0;right:auto}
+  .tle-thumb,.tle:nth-child(even) .tle-thumb{order:1;width:78px}
+  .tle-thumb img{height:60px}
 }
 
 .te-modal{display:none;position:fixed;inset:0;z-index:80;background:rgba(10,20,16,.55);align-items:flex-start;justify-content:center;padding:30px 16px;overflow-y:auto}
