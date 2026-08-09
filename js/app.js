@@ -203,7 +203,7 @@ function countWords(txt) {
   return m ? m.length : 0;
 }
 
-var FALA_COLORS = ['#6B5FE4','#C84B31','#1D7A4A','#C2851A','#4A90D9','#7B4FA0','#B03A5B','#2E8B8B'];
+var FALA_COLORS = ['#3E8E5A','#F4A93C','#14524A','#C2703D','#4A90A4','#7FB069','#9C5FA0','#B03A5B'];
 
 function falaColor(charId) {
   var idx = allChars.findIndex(function(c){ return String(c.id) === String(charId); });
