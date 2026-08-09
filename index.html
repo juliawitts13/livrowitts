@@ -93,6 +93,7 @@
   <div class="top">
     <div><div class="pt">Capítulos</div><div class="ps" id="cap-sub">9 capítulos</div></div>
     <div class="ta">
+      <button class="btn p" onclick="openWriting()" title="Abrir página de escrita do capítulo selecionado">✍️ Escrita</button>
     </div>
   </div>
   <div class="con" style="padding:16px 20px">
@@ -154,6 +155,21 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- Página de Escrita -->
+  <div id="write-mode" class="write-mode">
+    <div class="write-top">
+      <button class="btn" onclick="closeWriting()">← Voltar</button>
+      <div class="write-title">
+        <div class="write-title-main" id="write-title">Capítulo</div>
+        <div class="write-title-sub"><span id="write-words">0 palavras</span><span id="write-save-status"></span></div>
+      </div>
+      <button class="btn p" onclick="saveWriting()">Salvar</button>
+    </div>
+    <div class="write-scroll">
+      <textarea id="write-area" class="write-area" placeholder="Comece a escrever seu capítulo aqui..." oninput="onWriteInput()" spellcheck="true"></textarea>
+    </div>
   </div>
 </div>
 

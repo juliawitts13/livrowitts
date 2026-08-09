@@ -194,6 +194,75 @@ function openCap(el, ch) {
   setEl('ch-save-status', '');
 }
 
+// ─── PÁGINA DE ESCRITA ──────────────────────────────────────────────────────
+var writeSaveTimer = null;
+var writeDirty = false;
+
+function countWords(txt) {
+  var m = (txt || '').trim().match(/\S+/g);
+  return m ? m.length : 0;
+}
+
+function openWriting() {
+  if (!currentChapter) { alert('Selecione um capítulo primeiro.'); return; }
+  var wm = document.getElementById('write-mode');
+  var ta = document.getElementById('write-area');
+  var lbl = currentChapter.chapter_label || ('Cap. ' + currentChapter.chapter_number);
+  setEl('write-title', lbl + ' — ' + currentChapter.title);
+  ta.value = currentChapter.content || '';
+  writeDirty = false;
+  updateWriteWords();
+  setEl('write-save-status', '');
+  wm.classList.add('on');
+  ta.focus();
+}
+
+function closeWriting() {
+  if (writeDirty) saveWriting();
+  document.getElementById('write-mode').classList.remove('on');
+}
+
+function updateWriteWords() {
+  var ta = document.getElementById('write-area');
+  setEl('write-words', countWords(ta.value).toLocaleString('pt-BR') + ' palavras');
+}
+
+function onWriteInput() {
+  writeDirty = true;
+  updateWriteWords();
+  var st = document.getElementById('write-save-status');
+  if (st) { st.textContent = '· editando...'; st.style.color = 'var(--tx3)'; }
+  clearTimeout(writeSaveTimer);
+  writeSaveTimer = setTimeout(saveWriting, 2500);
+}
+
+function saveWriting() {
+  if (!currentChapter) return;
+  clearTimeout(writeSaveTimer);
+  var ta = document.getElementById('write-area');
+  var st = document.getElementById('write-save-status');
+  var content = ta.value;
+  var words = countWords(content);
+
+  if (st) { st.textContent = '· salvando...'; st.style.color = 'var(--tx3)'; }
+
+  sbPatch('chapters', 'id=eq.' + currentChapter.id, {
+    content: content,
+    word_count: words,
+    updated_at: new Date().toISOString()
+  })
+  .then(function() {
+    writeDirty = false;
+    currentChapter.content = content;
+    currentChapter.word_count = words;
+    if (st) { st.textContent = '✓ salvo'; st.style.color = 'var(--ac)'; }
+    setEl('ch-words-disp', words.toLocaleString('pt-BR') + ' palavras');
+  })
+  .catch(function(e) {
+    if (st) { st.textContent = '✗ erro: ' + e.message; st.style.color = '#C62828'; }
+  });
+}
+
 function updateChapterStatus() {
   if (!currentChapter) return;
   var sel = document.getElementById('ch-status-sel');
