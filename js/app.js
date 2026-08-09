@@ -888,21 +888,22 @@ function renderTimelineList(events) {
     div.className = 'tle' + (ev.is_highlight ? ' hl' : '') + (ev.is_future ? ' fut' : '');
     div.id = 'time-item-' + ev.id;
 
-    var photosHtml = (ev.photos && ev.photos.length)
-      ? '<div class="tle-photos">' + ev.photos.slice(0,4).map(function(u){ return '<img src="' + u + '" loading="lazy"/>'; }).join('') + '</div>'
+    var hoverPic = (ev.photos && ev.photos.length)
+      ? '<div class="tle-hoverpic"><img src="' + String(ev.photos[0]).replace(/"/g,'&quot;') + '" loading="lazy"/>' +
+        (ev.photos.length > 1 ? '<span class="more">+' + (ev.photos.length - 1) + '</span>' : '') + '</div>'
       : '';
 
     div.innerHTML =
       '<div class="tle-dot"></div>' +
-      '<div class="tle-card">' +
-        '<div class="tle-date"><span>' + (ev.is_highlight ? '⚡ ' : '') + escHtml(ev.in_world_date || 'sem data') + '</span><span class="tle-ord">#' + (i+1) + '</span></div>' +
+      '<div class="tle-card" title="Clique para editar">' +
+        hoverPic +
+        '<div class="tle-date"><span>' + (ev.is_highlight ? '⚡ ' : '') + escHtml(ev.in_world_date || 'sem data') + '</span><span class="tle-ord">#' + (i+1) + '</span>' +
+        (ev.photos && ev.photos.length ? '<span class="tle-pin">📷</span>' : '') + '</div>' +
         '<div class="tle-title">' + escHtml(ev.title || '') + '</div>' +
         (ev.description ? '<div class="tle-desc">' + escHtml(ev.description) + '</div>' : '') +
-        photosHtml +
         '<div class="tle-actions">' +
           '<button class="tle-mv" data-dir="-1" title="Mover para cima">↑</button>' +
           '<button class="tle-mv" data-dir="1" title="Mover para baixo">↓</button>' +
-          '<button class="tle-edit">✎ Editar</button>' +
         '</div>' +
       '</div>';
 
