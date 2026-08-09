@@ -30,6 +30,7 @@
     <div class="nl">Biblioteca</div>
     <div class="ni" onclick="go('idei',this)"><span class="ni-ic">💡</span>Ideias</div>
     <div class="ni" onclick="go('stat',this)"><span class="ni-ic">📊</span>Estatísticas</div>
+    <div class="ni" onclick="go('admin',this)"><span class="ni-ic">⚙️</span>Administração</div>
   </div>
   <div class="sb-bot">
     <div class="av">JW</div>
@@ -120,10 +121,32 @@
         <div id="ch-detail" style="display:none;flex:1;overflow-y:auto;padding:32px 40px">
 
           <!-- Estatísticas do capítulo -->
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px" id="ch-stats-row">
-            <div class="cd"><div class="sl">Palavras</div><div style="font-size:22px;font-weight:700;color:var(--tx)" id="ch-words-disp">—</div></div>
+          <div class="stt" style="margin-bottom:12px">📊 Estatísticas do capítulo</div>
+          <div class="chstat-grid" id="ch-stats-row">
+            <div class="cd chstat"><div class="sl">Palavras</div><div class="chstat-v" id="ch-words-disp">—</div></div>
+            <div class="cd chstat"><div class="sl">Tempo de leitura</div><div class="chstat-v" id="ch-read-disp">—</div><div class="ss">~240 pal/min</div></div>
+            <div class="cd chstat"><div class="sl">Caracteres</div><div class="chstat-v" id="ch-chars-disp">—</div></div>
+            <div class="cd chstat"><div class="sl">Sem espaços</div><div class="chstat-v" id="ch-charsns-disp">—</div></div>
+            <div class="cd chstat"><div class="sl">Parágrafos</div><div class="chstat-v" id="ch-paras-disp">—</div></div>
+            <div class="cd chstat"><div class="sl">Frases</div><div class="chstat-v" id="ch-sents-disp">—</div></div>
+            <div class="cd chstat"><div class="sl">Vocabulário único</div><div class="chstat-v" id="ch-vocab-disp">—</div><div class="ss" id="ch-vocab-sub"></div></div>
+            <div class="cd chstat"><div class="sl">Diálogo</div><div class="chstat-v" id="ch-dial-disp">—</div><div class="ss" id="ch-dial-sub"></div></div>
+          </div>
+          <div class="cd" style="margin-bottom:12px"><div class="sl">Ritmo</div><div style="font-size:13px;color:var(--tx);margin-top:4px" id="ch-rhythm-disp">—</div></div>
+          <div class="cd" style="margin-bottom:24px"><div class="sl" style="display:flex;justify-content:space-between"><span>Sentença mais longa</span><span id="ch-longest-count" style="color:#C2851A;font-weight:700"></span></div>
+            <div style="font-size:12px;color:var(--tx2);font-style:italic;margin-top:6px;line-height:1.6" id="ch-longest-disp">—</div>
+            <div id="ch-longest-warn" style="display:none;font-size:11px;color:#C2851A;margin-top:6px">atenção ao ritmo</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px">
             <div class="cd"><div class="sl">Status</div><div style="font-size:14px;font-weight:600;color:var(--tx);margin-top:6px" id="ch-status-disp">—</div></div>
             <div class="cd"><div class="sl">Última edição</div><div style="font-size:13px;font-weight:500;color:var(--tx);margin-top:6px" id="ch-edited-disp">—</div></div>
+          </div>
+
+          <!-- Sugestões de revisão -->
+          <div style="margin-bottom:24px" id="ch-suggestions-wrap">
+            <div class="stt" style="margin-bottom:10px">💬 Sugestões de revisão</div>
+            <div id="ch-suggestions" style="display:flex;flex-direction:column;gap:10px"></div>
+            <div id="ch-suggestions-empty" style="color:var(--tx3);font-size:12px">Nenhuma sugestão para este capítulo.</div>
           </div>
 
           <!-- Status e Sinopse editáveis -->
@@ -167,15 +190,54 @@
       </div>
       <button class="btn p" onclick="saveWriting()">Salvar</button>
     </div>
-    <div class="write-toolbar">
-      <span style="font-size:11px;color:var(--tx3)">Falas:</span>
-      <select id="fala-char-sel" class="fala-sel" title="Personagem da fala"></select>
-      <button class="btn fala-btn" onclick="markFala()" title="Selecione um trecho do texto e clique para marcar como fala do personagem escolhido">🗣 Marcar fala</button>
-      <button class="btn fala-btn" onclick="unmarkFala()" title="Remove a marcação de fala do trecho selecionado">✕ Desmarcar</button>
+    <div class="write-fmtbar" id="write-fmtbar">
+      <button class="fmt-btn" onclick="fmt('undo')" title="Desfazer">↶</button>
+      <button class="fmt-btn" onclick="fmt('redo')" title="Refazer">↷</button>
+      <span class="fmt-sep"></span>
+      <select class="fala-sel" id="fmt-block" onchange="fmtBlock(this.value)" title="Estilo do parágrafo">
+        <option value="p">Padrão</option>
+        <option value="h1">Título 1</option>
+        <option value="h2">Título 2</option>
+        <option value="h3">Título 3</option>
+        <option value="blockquote">Citação</option>
+      </select>
+      <span class="fmt-sep"></span>
+      <button class="fmt-btn" onclick="fmt('bold')" title="Negrito"><b>B</b></button>
+      <button class="fmt-btn" onclick="fmt('italic')" title="Itálico"><i>I</i></button>
+      <button class="fmt-btn" onclick="fmt('underline')" title="Sublinhado"><u>U</u></button>
+      <span class="fmt-sep"></span>
+      <button class="fmt-btn" onclick="fmt('justifyLeft')" title="Alinhar à esquerda">⇤</button>
+      <button class="fmt-btn" onclick="fmt('justifyCenter')" title="Centralizar">☰</button>
+      <button class="fmt-btn" onclick="fmt('justifyRight')" title="Alinhar à direita">⇥</button>
+      <button class="fmt-btn" onclick="fmt('justifyFull')" title="Justificar">▤</button>
+      <span class="fmt-sep"></span>
+      <button class="fmt-btn" onclick="fmt('insertUnorderedList')" title="Lista">•≡</button>
+      <button class="fmt-btn" onclick="fmt('insertOrderedList')" title="Lista numerada">1≡</button>
+    </div>
+    <div class="write-toolbar" id="write-markbar">
+      <span style="font-size:11px;color:var(--tx3)">Marcar:</span>
+      <select id="mark-type-sel" class="fala-sel" onchange="fillMarkEntities()" title="Tipo de marcação">
+        <option value="fala">🗣 Fala</option>
+        <option value="pers">👤 Personagem</option>
+        <option value="local">🌍 Local</option>
+        <option value="evento">📅 Evento</option>
+      </select>
+      <select id="mark-entity-sel" class="fala-sel" title="Quem/qual"></select>
+      <button class="btn fala-btn" onclick="markSelection()" title="Selecione um trecho do texto e clique para marcar">✓ Marcar</button>
+      <button class="btn fala-btn" onclick="unmarkFala()" title="Remove a marcação do trecho selecionado">✕ Desmarcar</button>
       <span id="fala-hint" style="font-size:11px;color:var(--tx3)"></span>
     </div>
+    <div class="write-toolbar" id="write-suggestbar" style="display:none">
+      <span style="font-size:11px;color:var(--tx3)">Modo revisão — o texto não pode ser editado diretamente.</span>
+      <button class="btn fala-btn" onclick="suggestFromSelection()" title="Selecione um trecho e proponha uma alteração">💬 Sugerir alteração</button>
+      <span id="suggest-hint" style="font-size:11px;color:var(--tx3)"></span>
+    </div>
     <div class="write-scroll">
-      <div id="write-area" class="write-area" contenteditable="true" oninput="onWriteInput()" spellcheck="true" data-placeholder="Comece a escrever seu capítulo aqui..."></div>
+      <div class="write-page">
+        <h1 class="write-page-title" id="write-page-title">Capítulo</h1>
+        <div class="write-divider"><span>✦</span></div>
+        <div id="write-area" class="write-area" contenteditable="true" oninput="onWriteInput()" spellcheck="true" data-placeholder="Comece a escrever seu capítulo aqui..."></div>
+      </div>
     </div>
   </div>
 </div>
@@ -470,6 +532,61 @@
       <div style="font-size:11px;color:var(--tx3);margin-bottom:12px">Baseado nos trechos marcados como fala na página de Escrita dos capítulos.</div>
       <div style="display:flex;flex-direction:column;gap:10px" id="st-dialogues"></div>
       <div id="st-dialogues-empty" style="display:none;color:var(--tx3);font-size:12px;padding:8px 0">Nenhuma fala marcada ainda. Abra um capítulo na página de Escrita, selecione um trecho de diálogo e use "🗣 Marcar fala".</div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMINISTRAÇÃO -->
+<div id="v-admin" class="view">
+  <div class="top">
+    <div><div class="pt">Administração</div><div class="ps">Participantes do projeto e permissões</div></div>
+  </div>
+  <div class="con">
+    <div id="admin-setup-warn" style="display:none" class="cd">
+      <div style="font-size:14px;font-weight:700;color:var(--tx);margin-bottom:6px">⚙️ Configuração necessária</div>
+      <div style="font-size:13px;color:var(--tx2);line-height:1.7">As tabelas de administração ainda não existem no Supabase. Abra o <strong>SQL Editor</strong> no painel do Supabase e execute o conteúdo do arquivo <strong>supabase/migrations/003_members_suggestions.sql</strong> do repositório. Depois recarregue esta página.</div>
+    </div>
+
+    <div id="admin-content" style="display:none">
+      <div class="cd" style="margin-bottom:24px">
+        <div class="stt">Você está usando como</div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <select id="admin-me-sel" class="fala-sel" style="max-width:280px" onchange="setCurrentMember(this.value)"></select>
+          <span id="admin-me-role" style="font-size:12px;color:var(--tx3)"></span>
+        </div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:8px">Autora: edita o texto diretamente e aprova sugestões. Revisora: não edita o texto — envia sugestões que a autora precisa aprovar.</div>
+      </div>
+
+      <div class="tc">
+        <div class="cd">
+          <div class="stt">Cadastrar participante</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div><div class="ce-label">Nome</div><input id="member-name" class="ce-input" placeholder="Nome da pessoa"/></div>
+            <div><div class="ce-label">E-mail</div><input id="member-email" type="email" class="ce-input" placeholder="email@exemplo.com"/></div>
+            <div><div class="ce-label">Papel</div>
+              <select id="member-role" class="ce-input">
+                <option value="autor">Autora — edita e aprova</option>
+                <option value="revisor">Revisora — apenas sugere</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center">
+              <button class="btn p" onclick="addMember()">+ Cadastrar</button>
+              <span id="member-add-status" style="font-size:12px;color:var(--tx3)"></span>
+            </div>
+          </div>
+        </div>
+        <div class="cd">
+          <div class="stt">Participantes</div>
+          <div id="member-list" style="display:flex;flex-direction:column;gap:8px"></div>
+          <div id="member-list-empty" style="display:none;color:var(--tx3);font-size:12px">Nenhum participante cadastrado ainda.</div>
+        </div>
+      </div>
+
+      <div class="cd" style="margin-top:24px">
+        <div class="stt">💬 Sugestões pendentes</div>
+        <div id="admin-suggestions" style="display:flex;flex-direction:column;gap:10px"></div>
+        <div id="admin-suggestions-empty" style="display:none;color:var(--tx3);font-size:12px">Nenhuma sugestão pendente.</div>
+      </div>
     </div>
   </div>
 </div>

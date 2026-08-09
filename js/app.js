@@ -175,12 +175,12 @@ function openCap(el, ch) {
   document.getElementById('ch-detail').style.display  = 'flex';
   document.getElementById('ch-detail').style.flexDirection = 'column';
 
-  var words   = (ch.word_count || 0).toLocaleString('pt-BR');
   var edited  = ch.updated_at ? new Date(ch.updated_at).toLocaleDateString('pt-BR', {day:'2-digit',month:'short',year:'numeric'}) : '—';
 
-  setEl('ch-words-disp', words + ' palavras');
+  renderChapterStats(ch);
   setEl('ch-status-disp', st.label);
   setEl('ch-edited-disp', edited);
+  loadSuggestions(ch.id);
 
   var sel = document.getElementById('ch-status-sel');
   if (sel) sel.value = ch.status || 'draft';
@@ -214,12 +214,25 @@ function escHtml(s) {
   return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-function fillFalaSelect() {
-  var sel = document.getElementById('fala-char-sel');
+function fillMarkEntities() {
+  var type = (document.getElementById('mark-type-sel') || {}).value || 'fala';
+  var sel = document.getElementById('mark-entity-sel');
   if (!sel) return;
-  sel.innerHTML = allChars.map(function(c) {
-    return '<option value="' + c.id + '">' + escHtml(c.name) + '</option>';
-  }).join('') || '<option value="">Nenhum personagem</option>';
+  var opts = '';
+  if (type === 'fala' || type === 'pers') {
+    opts = allChars.map(function(c) {
+      return '<option value="' + c.id + '">' + escHtml(c.name) + '</option>';
+    }).join('');
+    if (type === 'pers') opts += '<option value="__new__">+ Criar personagem com o texto selecionado</option>';
+    if (!opts) opts = '<option value="">Nenhum personagem</option>';
+  } else if (type === 'local') {
+    opts = allLocations.map(function(l) {
+      return '<option value="' + l.id + '">' + escHtml(l.name) + '</option>';
+    }).join('') + '<option value="__new__">+ Criar local com o texto selecionado</option>';
+  } else { // evento
+    opts = '<option value="__evento__">Criar evento com o texto selecionado</option>';
+  }
+  sel.innerHTML = opts;
 }
 
 function openWriting() {
@@ -228,55 +241,193 @@ function openWriting() {
   var ta = document.getElementById('write-area');
   var lbl = currentChapter.chapter_label || ('Cap. ' + currentChapter.chapter_number);
   setEl('write-title', lbl + ' — ' + currentChapter.title);
+  setEl('write-page-title', currentChapter.title || lbl);
 
   var content = currentChapter.content || '';
-  if (/<(span|div|br|p)\b/i.test(content)) {
+  if (/<(span|div|br|p|h1|h2|h3|blockquote|ul|ol)\b/i.test(content)) {
     ta.innerHTML = content;
   } else {
     ta.innerHTML = escHtml(content).replace(/\n/g, '<br>');
   }
 
-  if (allChars.length) fillFalaSelect();
-  else loadCharacters().then(fillFalaSelect);
+  if (allChars.length) fillMarkEntities();
+  else loadCharacters().then(fillMarkEntities);
+
+  // Papel do usuário atual: revisora não edita, só sugere
+  var isReviewer = currentMemberRole() === 'revisor';
+  ta.contentEditable = isReviewer ? 'false' : 'true';
+  document.getElementById('write-fmtbar').style.display   = isReviewer ? 'none' : 'flex';
+  document.getElementById('write-markbar').style.display  = isReviewer ? 'none' : 'flex';
+  document.getElementById('write-suggestbar').style.display = isReviewer ? 'flex' : 'none';
 
   writeDirty = false;
   updateWriteWords();
   setEl('write-save-status', '');
   setEl('fala-hint', '');
   wm.classList.add('on');
-  ta.focus();
+  if (!isReviewer) ta.focus();
 }
 
-function markFala() {
-  var ta   = document.getElementById('write-area');
-  var sel  = document.getElementById('fala-char-sel');
-  var hint = document.getElementById('fala-hint');
-  var charId = sel ? sel.value : '';
-  if (!charId) { hint.textContent = 'Cadastre um personagem primeiro.'; return; }
+// ─── FORMATAÇÃO ─────────────────────────────────────────────────────────────
+function fmt(cmd) {
+  document.getElementById('write-area').focus();
+  document.execCommand(cmd, false, null);
+  onWriteInput();
+}
 
+function fmtBlock(v) {
+  document.getElementById('write-area').focus();
+  document.execCommand('formatBlock', false, v === 'p' ? 'div' : v);
+  onWriteInput();
+}
+
+function getEditorSelection(hint) {
+  var ta = document.getElementById('write-area');
   var s = window.getSelection();
-  if (!s.rangeCount || s.isCollapsed) { hint.textContent = 'Selecione um trecho do texto primeiro.'; return; }
+  if (!s.rangeCount || s.isCollapsed) { hint.textContent = 'Selecione um trecho do texto primeiro.'; return null; }
   var range = s.getRangeAt(0);
-  if (!ta.contains(range.commonAncestorContainer)) { hint.textContent = 'A seleção precisa estar dentro do texto.'; return; }
+  if (!ta.contains(range.commonAncestorContainer)) { hint.textContent = 'A seleção precisa estar dentro do texto.'; return null; }
+  return { sel: s, range: range };
+}
 
-  var ch = allChars.find(function(c){ return String(c.id) === String(charId); });
-  var span = document.createElement('span');
-  span.className = 'fala';
-  span.setAttribute('data-char-id', charId);
-  span.setAttribute('title', 'Fala: ' + (ch ? ch.name : ''));
-  span.style.setProperty('--fc', falaColor(charId));
-
+function wrapRange(range, span, hint) {
   try {
     span.appendChild(range.extractContents());
     range.insertNode(span);
+    return true;
   } catch (e) {
-    hint.textContent = 'Não foi possível marcar essa seleção.';
+    hint.textContent = 'Não foi possível marcar essa seleção (evite selecionar através de parágrafos).';
+    return false;
+  }
+}
+
+function flashHint(hint, msg) {
+  hint.textContent = msg;
+  setTimeout(function(){ if (hint.textContent === msg) hint.textContent = ''; }, 4000);
+}
+
+function markSelection() {
+  var hint = document.getElementById('fala-hint');
+  var type = document.getElementById('mark-type-sel').value;
+  var entityId = (document.getElementById('mark-entity-sel') || {}).value || '';
+
+  var es = getEditorSelection(hint);
+  if (!es) return;
+  var selText = es.range.toString().trim();
+
+  if (type === 'fala') {
+    if (!entityId) { hint.textContent = 'Cadastre um personagem primeiro.'; return; }
+    var ch = allChars.find(function(c){ return String(c.id) === String(entityId); });
+    var span = document.createElement('span');
+    span.className = 'fala';
+    span.setAttribute('data-char-id', entityId);
+    span.setAttribute('title', 'Fala: ' + (ch ? ch.name : ''));
+    span.style.setProperty('--fc', falaColor(entityId));
+    if (!wrapRange(es.range, span, hint)) return;
+    es.sel.removeAllRanges();
+    flashHint(hint, '✓ Fala de ' + (ch ? ch.name : '') + ' marcada');
+    onWriteInput();
     return;
   }
-  s.removeAllRanges();
-  hint.textContent = '✓ Fala de ' + (ch ? ch.name : '') + ' marcada';
-  setTimeout(function(){ if (hint.textContent.indexOf('✓') === 0) hint.textContent = ''; }, 3000);
+
+  if (type === 'pers') {
+    var doWrap = function(id, name) {
+      var span = document.createElement('span');
+      span.className = 'mk-pers';
+      span.setAttribute('data-char-id', id);
+      span.setAttribute('title', 'Personagem: ' + name);
+      if (!wrapRange(es.range, span, hint)) return;
+      es.sel.removeAllRanges();
+      linkChapterCharacter(id);
+      flashHint(hint, '✓ ' + name + ' vinculado ao capítulo');
+      onWriteInput();
+    };
+    if (entityId === '__new__') {
+      if (!selText) { hint.textContent = 'Selecione o nome do personagem no texto.'; return; }
+      hint.textContent = 'Criando personagem...';
+      sbPost('characters', { project_id: PID, name: selText, avatar_color: CHAR_COLORS[allChars.length % CHAR_COLORS.length], status: 'alive', sort_order: allChars.length })
+        .then(function(rows) {
+          var c = rows[0];
+          allChars.push(c);
+          renderCharList(allChars);
+          setEl('nb-pers', allChars.length);
+          fillMarkEntities();
+          doWrap(c.id, c.name);
+        })
+        .catch(function(e){ hint.textContent = 'Erro ao criar personagem: ' + e.message; });
+    } else {
+      var c2 = allChars.find(function(c){ return String(c.id) === String(entityId); });
+      if (!c2) { hint.textContent = 'Escolha um personagem.'; return; }
+      doWrap(c2.id, c2.name);
+    }
+    return;
+  }
+
+  if (type === 'local') {
+    var doWrapLoc = function(id, name) {
+      var span = document.createElement('span');
+      span.className = 'mk-local';
+      span.setAttribute('data-loc-id', id);
+      span.setAttribute('title', 'Local: ' + name);
+      if (!wrapRange(es.range, span, hint)) return;
+      es.sel.removeAllRanges();
+      flashHint(hint, '✓ Local ' + name + ' marcado');
+      onWriteInput();
+    };
+    if (entityId === '__new__') {
+      if (!selText) { hint.textContent = 'Selecione o nome do local no texto.'; return; }
+      hint.textContent = 'Criando local...';
+      sbPost('locations', { project_id: PID, name: selText, thumb_emoji: '📍', thumb_gradient: 'linear-gradient(135deg,#1D7A4A,#35A96B)', sort_order: allLocations.length })
+        .then(function(rows) {
+          var l = rows[0];
+          allLocations.push(l);
+          locationsLoaded = false; // força recarregar a aba Locais na próxima visita
+          fillMarkEntities();
+          doWrapLoc(l.id, l.name);
+        })
+        .catch(function(e){ hint.textContent = 'Erro ao criar local: ' + e.message; });
+    } else {
+      var l2 = allLocations.find(function(l){ return String(l.id) === String(entityId); });
+      if (!l2) { hint.textContent = 'Escolha um local.'; return; }
+      doWrapLoc(l2.id, l2.name);
+    }
+    return;
+  }
+
+  // evento
+  if (!selText) { hint.textContent = 'Selecione o trecho que descreve o evento.'; return; }
+  var title = selText.length > 80 ? selText.slice(0, 77) + '…' : selText;
+  var span2 = document.createElement('span');
+  span2.className = 'mk-evento';
+  span2.setAttribute('title', 'Evento: ' + title);
+  if (!wrapRange(es.range, span2, hint)) return;
+  es.sel.removeAllRanges();
+  hint.textContent = 'Criando evento na linha do tempo...';
+  var lbl = currentChapter.chapter_label || ('Cap. ' + currentChapter.chapter_number);
+  sbPost('timeline_events', {
+    project_id: PID,
+    title: title,
+    description: 'Marcado em ' + lbl + ' — ' + currentChapter.title,
+    sort_order: (allTimelineEvents.length || 0) + 100,
+    is_highlight: false
+  })
+  .then(function(rows) {
+    if (rows && rows[0]) allTimelineEvents.push(rows[0]);
+    timelineLoaded = false; // recarrega a aba Linha do Tempo na próxima visita
+    flashHint(hint, '✓ Evento adicionado à Linha do Tempo');
+  })
+  .catch(function(e){ hint.textContent = 'Erro ao criar evento: ' + e.message; });
   onWriteInput();
+}
+
+function linkChapterCharacter(charId) {
+  if (!currentChapter) return;
+  sbFetch('chapter_characters?chapter_id=eq.' + currentChapter.id + '&character_id=eq.' + charId)
+    .then(function(rows) {
+      if (rows && rows.length) return;
+      return sbPost('chapter_characters', { chapter_id: currentChapter.id, character_id: charId });
+    })
+    .catch(function(e){ console.error('link chapter_character', e); });
 }
 
 function unmarkFala() {
@@ -287,12 +438,12 @@ function unmarkFala() {
 
   var node = s.getRangeAt(0).commonAncestorContainer;
   if (node.nodeType === 3) node = node.parentNode;
-  var span = node.closest ? node.closest('.fala') : null;
+  var span = node.closest ? node.closest('.fala,.mk-pers,.mk-local,.mk-evento') : null;
   if (!span || !ta.contains(span)) {
     // também remove todas as falas dentro da seleção, se houver
     var range = s.getRangeAt(0);
     var removed = 0;
-    ta.querySelectorAll('.fala').forEach(function(f) {
+    ta.querySelectorAll('.fala,.mk-pers,.mk-local,.mk-evento').forEach(function(f) {
       if (range.intersectsNode(f)) { unwrapNode(f); removed++; }
     });
     hint.textContent = removed ? '✓ Marcação removida' : 'Clique dentro de uma fala marcada.';
@@ -349,7 +500,7 @@ function saveWriting() {
     currentChapter.content = content;
     currentChapter.word_count = words;
     if (st) { st.textContent = '✓ salvo'; st.style.color = 'var(--ac)'; }
-    setEl('ch-words-disp', words.toLocaleString('pt-BR') + ' palavras');
+    renderChapterStats(currentChapter);
   })
   .catch(function(e) {
     if (st) { st.textContent = '✗ erro: ' + e.message; st.style.color = '#C62828'; }
@@ -1054,6 +1205,305 @@ function renderDashboardTimeline() {
   });
 }
 
+// ─── ESTATÍSTICAS DO CAPÍTULO ───────────────────────────────────────────────
+function chapterPlainText(ch) {
+  var tmp = document.createElement('div');
+  tmp.innerHTML = ch.content || '';
+  // <br> e blocos viram quebras de linha
+  tmp.querySelectorAll('br').forEach(function(br){ br.replaceWith('\n'); });
+  tmp.querySelectorAll('div,p,h1,h2,h3,blockquote,li').forEach(function(b){ b.append('\n'); });
+  return tmp.textContent || '';
+}
+
+function renderChapterStats(ch) {
+  var text = chapterPlainText(ch);
+  var words = text.match(/\S+/g) || [];
+  var nWords = words.length;
+
+  setEl('ch-words-disp', nWords.toLocaleString('pt-BR'));
+  setEl('ch-read-disp', Math.max(1, Math.round(nWords / 240)) + ' min');
+  setEl('ch-chars-disp', text.replace(/\n/g,'').length.toLocaleString('pt-BR'));
+  setEl('ch-charsns-disp', text.replace(/\s/g,'').length.toLocaleString('pt-BR'));
+
+  var paras = text.split(/\n+/).map(function(p){ return p.trim(); }).filter(Boolean);
+  setEl('ch-paras-disp', paras.length);
+
+  var sentences = text.replace(/\n/g,' ').split(/[.!?…]+["'”’)]?\s/).map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 1; });
+  setEl('ch-sents-disp', sentences.length);
+
+  var lower = words.map(function(w){ return w.toLowerCase().replace(/[^\wÀ-ÿ'-]/g,''); }).filter(Boolean);
+  var uniq = {};
+  lower.forEach(function(w){ uniq[w] = 1; });
+  var nUniq = Object.keys(uniq).length;
+  setEl('ch-vocab-disp', lower.length ? Math.round((nUniq/lower.length)*100) + '%' : '—');
+  setEl('ch-vocab-sub', nUniq.toLocaleString('pt-BR') + ' de ' + lower.length.toLocaleString('pt-BR'));
+
+  // Diálogo: parágrafos com fala marcada, travessão ou aspas de fala
+  var tmp = document.createElement('div');
+  tmp.innerHTML = ch.content || '';
+  var falaTexts = Array.from(tmp.querySelectorAll('.fala')).map(function(f){ return f.textContent.trim(); });
+  var dialogParas = paras.filter(function(p) {
+    if (/^[—–\-]\s?\S/.test(p) || /^["“]/.test(p)) return true;
+    return falaTexts.some(function(f){ return f && p.indexOf(f.slice(0, 40)) !== -1; });
+  });
+  setEl('ch-dial-disp', paras.length ? Math.round((dialogParas.length/paras.length)*100) + '%' : '—');
+  setEl('ch-dial-sub', dialogParas.length + ' de ' + paras.length + ' parágrafos');
+
+  var wps = sentences.length ? (nWords/sentences.length) : 0;
+  var spp = paras.length ? (sentences.length/paras.length) : 0;
+  setEl('ch-rhythm-disp', 'Em média, ' + wps.toFixed(1).replace('.',',') + ' palavras por frase e ' + spp.toFixed(1).replace('.',',') + ' frases por parágrafo.');
+
+  var longest = '', longestW = 0;
+  sentences.forEach(function(s) {
+    var n = (s.match(/\S+/g)||[]).length;
+    if (n > longestW) { longestW = n; longest = s; }
+  });
+  setEl('ch-longest-count', longestW ? longestW + ' palavras' : '');
+  setEl('ch-longest-disp', longest ? '“' + (longest.length > 140 ? longest.slice(0,137) + '…' : longest) + '”' : '—');
+  var warn = document.getElementById('ch-longest-warn');
+  if (warn) warn.style.display = longestW > 40 ? 'block' : 'none';
+}
+
+// ─── ADMINISTRAÇÃO: MEMBROS E PAPÉIS ────────────────────────────────────────
+var allMembers = [];
+var adminAvailable = null; // null = ainda não verificado
+
+function currentMember() {
+  var id = localStorage.getItem('sos_member_id');
+  return allMembers.find(function(m){ return String(m.id) === String(id); }) || null;
+}
+
+function currentMemberRole() {
+  var m = currentMember();
+  return m ? m.role : 'autor'; // sem cadastro, comporta-se como autora
+}
+
+function loadMembers() {
+  return sbFetch('project_members?project_id=eq.' + PID + '&order=created_at.asc')
+    .then(function(rows) {
+      adminAvailable = true;
+      allMembers = rows || [];
+      return allMembers;
+    })
+    .catch(function(e) {
+      adminAvailable = false;
+      allMembers = [];
+      return [];
+    });
+}
+
+function loadAdmin() {
+  loadMembers().then(function() {
+    document.getElementById('admin-setup-warn').style.display = adminAvailable ? 'none' : 'block';
+    document.getElementById('admin-content').style.display    = adminAvailable ? 'block' : 'none';
+    if (!adminAvailable) return;
+    renderMembers();
+    loadAdminSuggestions();
+  });
+}
+
+function renderMembers() {
+  var list = document.getElementById('member-list');
+  var empty = document.getElementById('member-list-empty');
+  var meSel = document.getElementById('admin-me-sel');
+  list.innerHTML = '';
+  empty.style.display = allMembers.length ? 'none' : 'block';
+
+  allMembers.forEach(function(m) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--bd);border-radius:10px';
+    row.innerHTML = '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--tx)">' + escHtml(m.name) + '</div>' +
+      '<div style="font-size:11px;color:var(--tx3)">' + escHtml(m.email) + '</div></div>' +
+      '<span class="ck ' + (m.role === 'autor' ? 'sd' : 'sr') + '">' + (m.role === 'autor' ? 'Autora' : 'Revisora') + '</span>';
+    var del = document.createElement('button');
+    del.className = 'btn'; del.style.cssText = 'padding:3px 8px;font-size:11px'; del.textContent = '🗑';
+    del.onclick = function() {
+      if (!confirm('Remover ' + m.name + ' do projeto?')) return;
+      sbDelete('project_members', m.id).then(loadAdmin).catch(function(e){ alert('Erro: ' + e.message); });
+    };
+    row.appendChild(del);
+    list.appendChild(row);
+  });
+
+  var meId = localStorage.getItem('sos_member_id') || '';
+  meSel.innerHTML = '<option value="">— selecionar —</option>' + allMembers.map(function(m) {
+    return '<option value="' + m.id + '"' + (String(m.id) === meId ? ' selected' : '') + '>' + escHtml(m.name) + '</option>';
+  }).join('');
+  updateMeRoleLabel();
+}
+
+function setCurrentMember(id) {
+  if (id) localStorage.setItem('sos_member_id', id);
+  else localStorage.removeItem('sos_member_id');
+  updateMeRoleLabel();
+}
+
+function updateMeRoleLabel() {
+  var m = currentMember();
+  setEl('admin-me-role', m ? (m.role === 'autor' ? 'Papel: Autora — pode editar e aprovar sugestões' : 'Papel: Revisora — pode apenas sugerir alterações') : 'Ninguém selecionado — acesso completo (modo padrão)');
+}
+
+function addMember() {
+  var name  = document.getElementById('member-name').value.trim();
+  var email = document.getElementById('member-email').value.trim();
+  var role  = document.getElementById('member-role').value;
+  var st    = document.getElementById('member-add-status');
+  if (!name || !email) { st.textContent = 'Preencha nome e e-mail.'; return; }
+  st.textContent = 'Cadastrando...';
+  sbPost('project_members', { project_id: PID, name: name, email: email, role: role })
+    .then(function() {
+      document.getElementById('member-name').value = '';
+      document.getElementById('member-email').value = '';
+      st.textContent = '✓ Cadastrado';
+      setTimeout(function(){ st.textContent = ''; }, 3000);
+      loadAdmin();
+    })
+    .catch(function(e){ st.textContent = 'Erro: ' + e.message; });
+}
+
+// ─── SUGESTÕES DE REVISÃO ───────────────────────────────────────────────────
+function suggestFromSelection() {
+  var hint = document.getElementById('suggest-hint');
+  if (!currentChapter) return;
+  var ta = document.getElementById('write-area');
+  var s = window.getSelection();
+  if (!s.rangeCount || s.isCollapsed || !ta.contains(s.getRangeAt(0).commonAncestorContainer)) {
+    hint.textContent = 'Selecione o trecho que quer alterar.'; return;
+  }
+  var excerpt = s.getRangeAt(0).toString();
+  var proposal = prompt('Trecho selecionado:\n\n“' + excerpt.slice(0,200) + (excerpt.length > 200 ? '…' : '') + '”\n\nDigite o texto sugerido no lugar:');
+  if (proposal === null) return;
+  var comment = prompt('Observação para a autora (opcional):') || null;
+  var m = currentMember();
+  hint.textContent = 'Enviando...';
+  sbPost('suggestions', {
+    project_id: PID,
+    chapter_id: currentChapter.id,
+    member_name: m ? m.name : 'Revisora',
+    excerpt: excerpt,
+    proposal: proposal,
+    comment: comment,
+    status: 'pendente'
+  })
+  .then(function() { flashHint(hint, '✓ Sugestão enviada para aprovação da autora'); })
+  .catch(function(e) {
+    hint.textContent = (String(e.message).indexOf('404') !== -1)
+      ? 'Tabelas de administração não configuradas (veja a aba Administração).'
+      : 'Erro: ' + e.message;
+  });
+}
+
+function loadSuggestions(chapterId) {
+  var box = document.getElementById('ch-suggestions');
+  var empty = document.getElementById('ch-suggestions-empty');
+  if (!box) return;
+  sbFetch('suggestions?chapter_id=eq.' + chapterId + '&order=created_at.desc')
+    .then(function(rows) {
+      renderSuggestionList(box, empty, rows || [], true);
+    })
+    .catch(function() { box.innerHTML = ''; empty.style.display = 'block'; });
+}
+
+function loadAdminSuggestions() {
+  var box = document.getElementById('admin-suggestions');
+  var empty = document.getElementById('admin-suggestions-empty');
+  sbFetch('suggestions?project_id=eq.' + PID + '&status=eq.pendente&order=created_at.desc')
+    .then(function(rows) {
+      renderSuggestionList(box, empty, rows || [], false);
+    })
+    .catch(function() { box.innerHTML = ''; empty.style.display = 'block'; });
+}
+
+function renderSuggestionList(box, empty, rows, chapterContext) {
+  box.innerHTML = '';
+  empty.style.display = rows.length ? 'none' : 'block';
+  var isAuthor = currentMemberRole() === 'autor';
+
+  rows.forEach(function(sg) {
+    var chTitle = '';
+    if (!chapterContext) {
+      var ch = allChapters.find(function(c){ return c.id === sg.chapter_id; });
+      chTitle = ch ? (ch.chapter_label || 'Cap. ' + ch.chapter_number) + ' — ' + ch.title : '';
+    }
+    var stColor = sg.status === 'aprovada' ? '#1D7A4A' : sg.status === 'recusada' ? '#C62828' : '#C2851A';
+    var div = document.createElement('div');
+    div.className = 'sugg';
+    div.innerHTML =
+      '<div class="sugg-meta"><span>' + escHtml(sg.member_name || 'Revisora') + (chTitle ? ' · ' + escHtml(chTitle) : '') + '</span>' +
+      '<span class="sugg-status" style="color:' + stColor + '">' + sg.status + '</span></div>' +
+      '<div class="sugg-old">' + escHtml(sg.excerpt) + '</div>' +
+      '<div class="sugg-new">' + escHtml(sg.proposal) + '</div>' +
+      (sg.comment ? '<div style="font-size:11px;color:var(--tx3);margin-top:6px">💬 ' + escHtml(sg.comment) + '</div>' : '');
+
+    if (sg.status === 'pendente' && isAuthor) {
+      var actions = document.createElement('div');
+      actions.className = 'sugg-actions';
+      var ok = document.createElement('button');
+      ok.className = 'btn p'; ok.style.cssText = 'padding:4px 10px;font-size:12px'; ok.textContent = '✓ Aprovar e aplicar';
+      ok.onclick = function() { resolveSuggestion(sg, true); };
+      var no = document.createElement('button');
+      no.className = 'btn'; no.style.cssText = 'padding:4px 10px;font-size:12px'; no.textContent = '✗ Recusar';
+      no.onclick = function() { resolveSuggestion(sg, false); };
+      actions.appendChild(ok); actions.appendChild(no);
+      div.appendChild(actions);
+    }
+    box.appendChild(div);
+  });
+}
+
+function resolveSuggestion(sg, approve) {
+  if (!approve) {
+    sbPatch('suggestions', 'id=eq.' + sg.id, { status: 'recusada' })
+      .then(refreshSuggestionViews).catch(function(e){ alert('Erro: ' + e.message); });
+    return;
+  }
+  var ch = allChapters.find(function(c){ return c.id === sg.chapter_id; });
+  if (!ch) { alert('Capítulo não encontrado.'); return; }
+
+  var content = ch.content || '';
+  var applied = false;
+  // tenta substituir no HTML direto; senão, via texto escapado
+  if (content.indexOf(sg.excerpt) !== -1) {
+    content = content.replace(sg.excerpt, sg.proposal);
+    applied = true;
+  } else {
+    var escExcerpt = escHtml(sg.excerpt);
+    if (content.indexOf(escExcerpt) !== -1) {
+      content = content.replace(escExcerpt, escHtml(sg.proposal));
+      applied = true;
+    }
+  }
+
+  if (!applied) {
+    if (!confirm('Não encontrei o trecho exato no texto atual (pode ter sido editado). Marcar como aprovada mesmo assim, sem aplicar automaticamente?')) return;
+    sbPatch('suggestions', 'id=eq.' + sg.id, { status: 'aprovada' })
+      .then(refreshSuggestionViews).catch(function(e){ alert('Erro: ' + e.message); });
+    return;
+  }
+
+  var tmp = document.createElement('div');
+  tmp.innerHTML = content;
+  var words = (tmp.innerText.match(/\S+/g) || []).length;
+
+  sbPatch('chapters', 'id=eq.' + sg.chapter_id, { content: content, word_count: words, updated_at: new Date().toISOString() })
+    .then(function() {
+      ch.content = content;
+      ch.word_count = words;
+      return sbPatch('suggestions', 'id=eq.' + sg.id, { status: 'aprovada' });
+    })
+    .then(function() {
+      if (currentChapter && currentChapter.id === ch.id) renderChapterStats(ch);
+      refreshSuggestionViews();
+    })
+    .catch(function(e){ alert('Erro ao aplicar: ' + e.message); });
+}
+
+function refreshSuggestionViews() {
+  if (currentChapter) loadSuggestions(currentChapter.id);
+  var adminBox = document.getElementById('admin-suggestions');
+  if (adminBox && document.getElementById('v-admin').classList.contains('on')) loadAdminSuggestions();
+}
+
 // ─── NAVEGAÇÃO ──────────────────────────────────────────────────────────────
 var timelineLoaded = false;
 var locationsLoaded = false;
@@ -1070,6 +1520,7 @@ function go(name, el) {
   if (name === 'time' && !timelineLoaded) { timelineLoaded = true; loadTimeline(); }
   if (name === 'loca' && !locationsLoaded) { locationsLoaded = true; loadLocations(); }
   if (name === 'rela' && !relationshipsLoaded) { relationshipsLoaded = true; loadRelationships(); }
+  if (name === 'admin') loadAdmin();
 }
 
 // ─── MODO ESCURO ────────────────────────────────────────────────────────────
@@ -1093,4 +1544,5 @@ document.addEventListener('DOMContentLoaded', function() {
   loadChapters();
   loadIdeas();
   loadCharacters().then(function(){ loadLocations(); loadTimeline(); locationsLoaded = true; timelineLoaded = true; });
+  loadMembers();
 });
