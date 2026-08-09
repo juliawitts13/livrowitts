@@ -386,6 +386,15 @@
               <div class="ce-label">Descrição</div>
               <textarea id="te-desc" class="ce-textarea" style="min-height:100px" placeholder="O que acontece nesse momento..."></textarea>
             </div>
+            <div style="margin-bottom:20px">
+              <div class="ce-label">Fotos do evento</div>
+              <div id="te-photos" class="photo-grid"></div>
+              <label class="photo-add">
+                📷 Adicionar fotos
+                <input type="file" accept="image/*" multiple style="display:none" onchange="uploadPhotos(this, 'timeline_events')"/>
+              </label>
+              <span id="te-photo-status" style="font-size:11px;color:var(--tx3);margin-left:10px"></span>
+            </div>
             <label style="display:flex;align-items:center;gap:8px;margin-bottom:24px;font-size:13px;color:var(--tx2);cursor:pointer">
               <input type="checkbox" id="te-future"/> Evento futuro (ainda por escrever)
             </label>
@@ -413,6 +422,15 @@
         <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px">
           <input id="lo-emoji" class="ce-input" style="width:64px;text-align:center;font-size:26px;padding:8px" maxlength="2" placeholder="🌍"/>
           <input id="lo-name" style="flex:1;font-size:20px;font-weight:700;background:transparent;border:none;border-bottom:2px solid var(--bd);outline:none;color:var(--tx);font-family:var(--f);padding:4px 0" placeholder="Nome do local"/>
+        </div>
+        <div style="margin-bottom:20px">
+          <div class="ce-label">Fotos do local</div>
+          <div id="lo-photos" class="photo-grid"></div>
+          <label class="photo-add">
+            📷 Adicionar fotos
+            <input type="file" accept="image/*" multiple style="display:none" onchange="uploadPhotos(this, 'locations')"/>
+          </label>
+          <span id="lo-photo-status" style="font-size:11px;color:var(--tx3);margin-left:10px"></span>
         </div>
         <div style="margin-bottom:16px">
           <div class="ce-label">Descrição</div>

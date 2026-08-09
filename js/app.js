@@ -773,10 +773,13 @@ function renderLocaList(locs) {
     var item = document.createElement('div');
     item.className = 'char-list-item';
     item.id = 'loca-item-' + loc.id;
-    item.innerHTML =
-      '<div style="width:38px;height:38px;border-radius:8px;background:' + (loc.thumb_gradient||'var(--sur2)') + ';display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">' + (loc.thumb_emoji||'🌍') + '</div>' +
+    var thumb = (loc.photos && loc.photos.length)
+      ? '<img class="loc-thumb-img" src="' + loc.photos[0] + '" loading="lazy"/>'
+      : '<div style="width:38px;height:38px;border-radius:8px;background:' + (loc.thumb_gradient||'var(--sur2)') + ';display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">' + (loc.thumb_emoji||'🌍') + '</div>';
+    item.innerHTML = thumb +
       '<div style="flex:1;min-width:0">' +
         '<div style="font-size:13px;font-weight:600;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (loc.name||'') + '</div>' +
+        (loc.photos && loc.photos.length ? '<div style="font-size:10px;color:var(--tx3)">📷 ' + loc.photos.length + (loc.photos.length===1?' foto':' fotos') + '</div>' : '') +
       '</div>';
     (function(l) { item.onclick = function() { openLocationEditor(l); }; })(loc);
     container.appendChild(item);
@@ -797,6 +800,8 @@ function openLocationEditor(loc) {
   document.getElementById('lo-desc').value  = loc.description || '';
   document.getElementById('lo-notes').value = loc.notes || '';
   document.getElementById('lo-save-status').textContent = '';
+  document.getElementById('lo-photo-status').textContent = '';
+  renderPhotoGrid('lo-photos', 'locations');
 }
 
 function newLocation() {
@@ -881,6 +886,11 @@ function renderTimelineList(events) {
     var n = document.createElement('div'); n.className='cpn'; n.textContent = ev.in_world_date || '—';
     var t = document.createElement('div'); t.className='cpt'; t.textContent = (ev.is_highlight ? '⚡ ' : '') + ev.title;
     div.appendChild(n); div.appendChild(t);
+    if (ev.photos && ev.photos.length) {
+      var ph = document.createElement('img');
+      ph.className = 'time-item-photo'; ph.src = ev.photos[0]; ph.loading = 'lazy';
+      div.appendChild(ph);
+    }
     (function(e){ div.onclick = function(){ openTimelineEditor(e); }; })(ev);
     container.appendChild(div);
   });
@@ -901,6 +911,8 @@ function openTimelineEditor(ev) {
   document.getElementById('te-highlight').value = ev.is_highlight ? 'true' : 'false';
   document.getElementById('te-future').checked  = !!ev.is_future;
   document.getElementById('te-save-status').textContent = '';
+  document.getElementById('te-photo-status').textContent = '';
+  renderPhotoGrid('te-photos', 'timeline_events');
 }
 
 function newTimelineEvent() {
@@ -1203,6 +1215,127 @@ function renderDashboardTimeline() {
     div.innerHTML = '<div class="tld' + (ev.is_future?' s':'') + '"></div><div class="tldt">' + (ev.in_world_date||'') + '</div><div class="tltl">' + (ev.title||'') + '</div>';
     box.appendChild(div);
   });
+}
+
+// ─── FOTOS (Supabase Storage) ───────────────────────────────────────────────
+function photoCtx(table) {
+  if (table === 'locations') {
+    var loc = allLocations.find(function(l){ return l.id === currentLocationId; });
+    return loc ? { row: loc, grid: 'lo-photos', status: 'lo-photo-status', rerender: function(){ renderLocaList(allLocations); var it=document.getElementById('loca-item-'+loc.id); if(it) it.classList.add('on'); } } : null;
+  }
+  var ev = allTimelineEvents.find(function(e){ return e.id === currentTimelineId; });
+  return ev ? { row: ev, grid: 'te-photos', status: 'te-photo-status', rerender: function(){ renderTimelineList(allTimelineEvents); var it=document.getElementById('time-item-'+ev.id); if(it) it.classList.add('on'); } } : null;
+}
+
+function sbUploadPhoto(file) {
+  var ext  = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
+  var path = Date.now() + '-' + Math.random().toString(36).slice(2,8) + '.' + ext;
+  return fetch(SB_URL + '/storage/v1/object/fotos/' + path, {
+    method: 'POST',
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY,
+      'Content-Type': file.type || 'image/jpeg'
+    },
+    body: file
+  }).then(function(r) {
+    if (!r.ok) return r.text().then(function(t){ throw new Error('HTTP ' + r.status + ' ' + t.slice(0,120)); });
+    return SB_URL + '/storage/v1/object/public/fotos/' + path;
+  });
+}
+
+function uploadPhotos(input, table) {
+  var ctx = photoCtx(table);
+  if (!ctx) { input.value = ''; return; }
+  var files = Array.from(input.files || []);
+  input.value = '';
+  if (!files.length) return;
+
+  var tooBig = files.filter(function(f){ return f.size > 8 * 1024 * 1024; });
+  if (tooBig.length) { alert('Cada foto pode ter no máximo 8 MB. Ignorando: ' + tooBig.map(function(f){return f.name;}).join(', ')); }
+  files = files.filter(function(f){ return f.size <= 8 * 1024 * 1024; });
+  if (!files.length) return;
+
+  var st = document.getElementById(ctx.status);
+  var done = 0;
+  st.textContent = 'Enviando 0/' + files.length + '...';
+
+  var uploads = files.map(function(f) {
+    return sbUploadPhoto(f).then(function(url) {
+      done++;
+      st.textContent = 'Enviando ' + done + '/' + files.length + '...';
+      return url;
+    });
+  });
+
+  Promise.all(uploads)
+    .then(function(urls) {
+      var photos = (ctx.row.photos || []).concat(urls);
+      return sbPatch(table, 'id=eq.' + ctx.row.id, { photos: photos })
+        .then(function() {
+          ctx.row.photos = photos;
+          renderPhotoGrid(ctx.grid, table);
+          ctx.rerender();
+          st.textContent = '✓ ' + urls.length + (urls.length === 1 ? ' foto adicionada' : ' fotos adicionadas');
+          setTimeout(function(){ st.textContent = ''; }, 3000);
+        });
+    })
+    .catch(function(e) { st.textContent = 'Erro: ' + e.message; });
+}
+
+function renderPhotoGrid(gridId, table) {
+  var ctx = photoCtx(table);
+  var grid = document.getElementById(gridId);
+  if (!grid) return;
+  grid.innerHTML = '';
+  if (!ctx) return;
+  (ctx.row.photos || []).forEach(function(url, i) {
+    var d = document.createElement('div');
+    d.className = 'photo-thumb';
+    var img = document.createElement('img');
+    img.src = url; img.loading = 'lazy';
+    img.onclick = function(){ openLightbox(url); };
+    var del = document.createElement('button');
+    del.className = 'photo-del'; del.textContent = '✕'; del.title = 'Remover foto';
+    del.onclick = function(e) {
+      e.stopPropagation();
+      if (!confirm('Remover esta foto?')) return;
+      removePhoto(table, i);
+    };
+    d.appendChild(img); d.appendChild(del);
+    grid.appendChild(d);
+  });
+}
+
+function removePhoto(table, index) {
+  var ctx = photoCtx(table);
+  if (!ctx) return;
+  var url = (ctx.row.photos || [])[index];
+  var photos = (ctx.row.photos || []).slice();
+  photos.splice(index, 1);
+  sbPatch(table, 'id=eq.' + ctx.row.id, { photos: photos })
+    .then(function() {
+      ctx.row.photos = photos;
+      renderPhotoGrid(ctx.grid, table);
+      ctx.rerender();
+      // apaga o arquivo do storage (best-effort)
+      var path = url && url.split('/object/public/fotos/')[1];
+      if (path) fetch(SB_URL + '/storage/v1/object/fotos/' + path, {
+        method: 'DELETE',
+        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+      }).catch(function(){});
+    })
+    .catch(function(e){ alert('Erro ao remover: ' + e.message); });
+}
+
+function openLightbox(url) {
+  var lb = document.createElement('div');
+  lb.className = 'photo-lightbox';
+  var img = document.createElement('img');
+  img.src = url;
+  lb.appendChild(img);
+  lb.onclick = function(){ lb.remove(); };
+  document.body.appendChild(lb);
 }
 
 // ─── ESTATÍSTICAS DO CAPÍTULO ───────────────────────────────────────────────
