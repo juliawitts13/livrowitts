@@ -260,6 +260,11 @@ function openWriting() {
   document.getElementById('write-markbar').style.display  = isReviewer ? 'none' : 'flex';
   document.getElementById('write-suggestbar').style.display = isReviewer ? 'flex' : 'none';
 
+  loadComments(currentChapter.id);
+  var panel = document.getElementById('cmt-panel');
+  panel.classList.toggle('closed', localStorage.getItem('sos_cmt_closed') === '1');
+  document.getElementById('cmt-toggle-btn').textContent = panel.classList.contains('closed') ? '«' : '»';
+
   writeDirty = false;
   updateWriteWords();
   setEl('write-save-status', '');
@@ -1382,6 +1387,132 @@ function openLightbox(url) {
   lb.appendChild(img);
   lb.onclick = function(){ lb.remove(); };
   document.body.appendChild(lb);
+}
+
+// ─── COMENTÁRIOS ANCORADOS ──────────────────────────────────────────────────
+var chapterComments = [];
+
+function toggleCmtPanel() {
+  var panel = document.getElementById('cmt-panel');
+  panel.classList.toggle('closed');
+  var btn = document.getElementById('cmt-toggle-btn');
+  btn.textContent = panel.classList.contains('closed') ? '«' : '»';
+  localStorage.setItem('sos_cmt_closed', panel.classList.contains('closed') ? '1' : '');
+}
+
+function addComment() {
+  if (!currentChapter) return;
+  var hint = document.getElementById('fala-hint') || document.getElementById('suggest-hint');
+  var ta = document.getElementById('write-area');
+  var s = window.getSelection();
+  if (!s.rangeCount || s.isCollapsed || !ta.contains(s.getRangeAt(0).commonAncestorContainer)) {
+    if (hint) hint.textContent = 'Selecione um trecho do texto primeiro.'; return;
+  }
+  var range = s.getRangeAt(0);
+  var excerpt = range.toString();
+  var body = prompt('Comentário sobre:\n\n“' + excerpt.slice(0,180) + (excerpt.length > 180 ? '…' : '') + '”');
+  if (!body || !body.trim()) return;
+
+  var anchor = 'cmt-' + Date.now() + '-' + Math.random().toString(36).slice(2,6);
+  var span = document.createElement('span');
+  span.className = 'cmt';
+  span.id = anchor;
+  span.title = 'Comentário — clique para ver no painel';
+  try {
+    span.appendChild(range.extractContents());
+    range.insertNode(span);
+  } catch (e) {
+    if (hint) hint.textContent = 'Não foi possível ancorar nessa seleção (evite atravessar parágrafos).';
+    return;
+  }
+  s.removeAllRanges();
+
+  var m = currentMember();
+  sbPost('chapter_comments', {
+    project_id: PID,
+    chapter_id: currentChapter.id,
+    anchor: anchor,
+    member_name: m ? m.name : 'Autora',
+    excerpt: excerpt.slice(0, 300),
+    body: body.trim()
+  })
+  .then(function(rows) {
+    if (rows && rows[0]) chapterComments.push(rows[0]);
+    renderCmtList();
+    saveWriting(); // persiste o span no conteúdo
+  })
+  .catch(function(e) {
+    unwrapAnchor(anchor);
+    if (hint) hint.textContent = 'Erro ao salvar comentário: ' + e.message;
+  });
+}
+
+function loadComments(chapterId) {
+  chapterComments = [];
+  renderCmtList();
+  sbFetch('chapter_comments?chapter_id=eq.' + chapterId + '&order=created_at.asc')
+    .then(function(rows) { chapterComments = rows || []; renderCmtList(); })
+    .catch(function(e) { console.error('comments error', e); });
+}
+
+function renderCmtList() {
+  var list = document.getElementById('cmt-list');
+  var empty = document.getElementById('cmt-empty');
+  if (!list) return;
+  var open = chapterComments.filter(function(c){ return !c.resolved; });
+  setEl('cmt-count', chapterComments.length ? String(open.length) : '');
+  empty.style.display = chapterComments.length ? 'none' : 'block';
+  list.innerHTML = '';
+
+  chapterComments.forEach(function(c) {
+    var d = new Date(c.created_at);
+    var when = d.toLocaleDateString('pt-BR', {day:'2-digit',month:'short'}) + ' ' + d.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+    var div = document.createElement('div');
+    div.className = 'cmt-item' + (c.resolved ? ' res' : '');
+    div.innerHTML =
+      '<div class="cmt-item-meta"><span>' + escHtml(c.member_name || '') + '</span><span>' + when + '</span></div>' +
+      (c.excerpt ? '<div class="cmt-item-excerpt">' + escHtml(c.excerpt) + '</div>' : '') +
+      '<div class="cmt-item-body">' + escHtml(c.body) + '</div>' +
+      '<div class="cmt-item-actions">' +
+        '<button class="cmt-res-btn">' + (c.resolved ? '↩ Reabrir' : '✓ Resolver') + '</button>' +
+        '<button class="cmt-del-btn">Excluir</button>' +
+      '</div>';
+
+    div.addEventListener('click', function(e) {
+      if (e.target.closest('button')) return;
+      var span = document.getElementById(c.anchor);
+      if (span) {
+        span.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        span.classList.remove('flash'); void span.offsetWidth;
+        span.classList.add('flash');
+      }
+    });
+
+    div.querySelector('.cmt-res-btn').addEventListener('click', function() {
+      sbPatch('chapter_comments', 'id=eq.' + c.id, { resolved: !c.resolved })
+        .then(function() { c.resolved = !c.resolved; renderCmtList(); })
+        .catch(function(e){ alert('Erro: ' + e.message); });
+    });
+
+    div.querySelector('.cmt-del-btn').addEventListener('click', function() {
+      if (!confirm('Excluir este comentário?')) return;
+      sbDelete('chapter_comments', c.id)
+        .then(function() {
+          chapterComments = chapterComments.filter(function(x){ return x.id !== c.id; });
+          unwrapAnchor(c.anchor);
+          renderCmtList();
+          saveWriting();
+        })
+        .catch(function(e){ alert('Erro: ' + e.message); });
+    });
+
+    list.appendChild(div);
+  });
+}
+
+function unwrapAnchor(anchor) {
+  var span = document.getElementById(anchor);
+  if (span) unwrapNode(span);
 }
 
 // ─── ESTATÍSTICAS DO CAPÍTULO ───────────────────────────────────────────────

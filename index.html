@@ -232,19 +232,31 @@
       <select id="mark-entity-sel" class="fala-sel" title="Quem/qual"></select>
       <button class="btn fala-btn" onclick="markSelection()" title="Selecione um trecho do texto e clique para marcar">✓ Marcar</button>
       <button class="btn fala-btn" onclick="unmarkFala()" title="Remove a marcação do trecho selecionado">✕ Desmarcar</button>
+      <button class="btn fala-btn" onclick="addComment()" title="Selecione um trecho e adicione um comentário">💬 Comentar</button>
       <span id="fala-hint" style="font-size:11px;color:var(--tx3)"></span>
     </div>
     <div class="write-toolbar" id="write-suggestbar" style="display:none">
       <span style="font-size:11px;color:var(--tx3)">Modo revisão — o texto não pode ser editado diretamente.</span>
-      <button class="btn fala-btn" onclick="suggestFromSelection()" title="Selecione um trecho e proponha uma alteração">💬 Sugerir alteração</button>
+      <button class="btn fala-btn" onclick="suggestFromSelection()" title="Selecione um trecho e proponha uma alteração">✏️ Sugerir alteração</button>
+      <button class="btn fala-btn" onclick="addComment()" title="Selecione um trecho e adicione um comentário">💬 Comentar</button>
       <span id="suggest-hint" style="font-size:11px;color:var(--tx3)"></span>
     </div>
-    <div class="write-scroll">
-      <div class="write-page">
-        <h1 class="write-page-title" id="write-page-title">Capítulo</h1>
-        <div class="write-divider"><span>❦</span></div>
-        <div id="write-area" class="write-area" contenteditable="true" oninput="onWriteInput()" spellcheck="true" data-placeholder="Comece a escrever seu capítulo aqui..."></div>
+    <div class="write-body">
+      <div class="write-scroll">
+        <div class="write-page">
+          <h1 class="write-page-title" id="write-page-title">Capítulo</h1>
+          <div class="write-divider"><span>❦</span></div>
+          <div id="write-area" class="write-area" contenteditable="true" oninput="onWriteInput()" spellcheck="true" data-placeholder="Comece a escrever seu capítulo aqui..."></div>
+        </div>
       </div>
+      <aside class="cmt-panel" id="cmt-panel">
+        <div class="cmt-head">
+          <span>💬 Comentários <span id="cmt-count" class="tle-ord"></span></span>
+          <button class="cmt-toggle" onclick="toggleCmtPanel()" title="Recolher/expandir painel" id="cmt-toggle-btn">»</button>
+        </div>
+        <div class="cmt-list" id="cmt-list"></div>
+        <div class="cmt-empty" id="cmt-empty">Selecione um trecho do texto e clique em 💬 Comentar para anotar algo naquele ponto.</div>
+      </aside>
     </div>
   </div>
 </div>
