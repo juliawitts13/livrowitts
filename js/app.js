@@ -878,48 +878,92 @@ function loadTimeline() {
 function renderTimelineList(events) {
   var container = document.getElementById('time-list');
   if (!container) return;
+  var sorted = events.slice().sort(function(a,b){ return (a.sort_order||0) - (b.sort_order||0); });
+  var emptyState = document.getElementById('time-empty-state');
+  if (emptyState) emptyState.style.display = sorted.length ? 'none' : 'block';
   container.innerHTML = '';
-  events.forEach(function(ev) {
+
+  sorted.forEach(function(ev, i) {
     var div = document.createElement('div');
-    div.className = 'cpi';
+    div.className = 'tle' + (ev.is_highlight ? ' hl' : '') + (ev.is_future ? ' fut' : '');
     div.id = 'time-item-' + ev.id;
-    var n = document.createElement('div'); n.className='cpn'; n.textContent = ev.in_world_date || '—';
-    var t = document.createElement('div'); t.className='cpt'; t.textContent = (ev.is_highlight ? '⚡ ' : '') + ev.title;
-    div.appendChild(n); div.appendChild(t);
-    if (ev.photos && ev.photos.length) {
-      var ph = document.createElement('img');
-      ph.className = 'time-item-photo'; ph.src = ev.photos[0]; ph.loading = 'lazy';
-      div.appendChild(ph);
-    }
-    (function(e){ div.onclick = function(){ openTimelineEditor(e); }; })(ev);
+
+    var photosHtml = (ev.photos && ev.photos.length)
+      ? '<div class="tle-photos">' + ev.photos.slice(0,4).map(function(u){ return '<img src="' + u + '" loading="lazy"/>'; }).join('') + '</div>'
+      : '';
+
+    div.innerHTML =
+      '<div class="tle-dot"></div>' +
+      '<div class="tle-card">' +
+        '<div class="tle-date"><span>' + (ev.is_highlight ? '⚡ ' : '') + escHtml(ev.in_world_date || 'sem data') + '</span><span class="tle-ord">#' + (i+1) + '</span></div>' +
+        '<div class="tle-title">' + escHtml(ev.title || '') + '</div>' +
+        (ev.description ? '<div class="tle-desc">' + escHtml(ev.description) + '</div>' : '') +
+        photosHtml +
+        '<div class="tle-actions">' +
+          '<button class="tle-mv" data-dir="-1" title="Mover para cima">↑</button>' +
+          '<button class="tle-mv" data-dir="1" title="Mover para baixo">↓</button>' +
+          '<button class="tle-edit">✎ Editar</button>' +
+        '</div>' +
+      '</div>';
+
+    (function(e, idx) {
+      div.querySelector('.tle-card').addEventListener('click', function(evt) {
+        if (evt.target.closest('.tle-mv')) return;
+        openTimelineEditor(e);
+      });
+      div.querySelectorAll('.tle-mv').forEach(function(btn) {
+        btn.addEventListener('click', function(evt) {
+          evt.stopPropagation();
+          moveTimelineEvent(e, parseInt(btn.dataset.dir), sorted, idx);
+        });
+      });
+    })(ev, i);
+
     container.appendChild(div);
   });
 }
 
+function moveTimelineEvent(ev, dir, sorted, idx) {
+  var target = sorted[idx + dir];
+  if (!target) return;
+  var a = ev.sort_order || 0, b = target.sort_order || 0;
+  if (a === b) { b = a; a = a + dir; } // desempata se ordens iguais
+  else { var tmp = a; a = b; b = tmp; }
+  Promise.all([
+    sbPatch('timeline_events', 'id=eq.' + ev.id,     { sort_order: a }),
+    sbPatch('timeline_events', 'id=eq.' + target.id, { sort_order: b })
+  ]).then(function() {
+    ev.sort_order = a; target.sort_order = b;
+    renderTimelineList(allTimelineEvents);
+    renderDashboardTimeline();
+  }).catch(function(e){ alert('Erro ao reordenar: ' + e.message); });
+}
+
 function openTimelineEditor(ev) {
   currentTimelineId = ev.id;
-  document.querySelectorAll('#time-list .cpi').forEach(function(i){ i.classList.remove('on'); });
-  var item = document.getElementById('time-item-' + ev.id);
-  if (item) item.classList.add('on');
-
-  document.getElementById('time-empty').style.display = 'none';
-  document.getElementById('time-editor').style.display = 'flex';
-
   document.getElementById('te-title').value     = ev.title || '';
   document.getElementById('te-date').value      = ev.in_world_date || '';
+  document.getElementById('te-order').value     = ev.sort_order || 1;
   document.getElementById('te-desc').value      = ev.description || '';
   document.getElementById('te-highlight').value = ev.is_highlight ? 'true' : 'false';
   document.getElementById('te-future').checked  = !!ev.is_future;
   document.getElementById('te-save-status').textContent = '';
   document.getElementById('te-photo-status').textContent = '';
   renderPhotoGrid('te-photos', 'timeline_events');
+  document.getElementById('te-modal').classList.add('open');
+}
+
+function closeTimelineEditor() {
+  document.getElementById('te-modal').classList.remove('open');
+  currentTimelineId = null;
 }
 
 function newTimelineEvent() {
+  var maxOrd = allTimelineEvents.reduce(function(m,e){ return Math.max(m, e.sort_order||0); }, 0);
   var body = {
     project_id: PID,
     title: 'Novo evento',
-    sort_order: allTimelineEvents.length + 1
+    sort_order: maxOrd + 1
   };
   sbPost('timeline_events', body)
   .then(function(rows) {
@@ -939,6 +983,7 @@ function saveTimelineEvent() {
   var body = {
     title:        document.getElementById('te-title').value.trim(),
     in_world_date:document.getElementById('te-date').value.trim(),
+    sort_order:   parseInt(document.getElementById('te-order').value) || 1,
     description:  document.getElementById('te-desc').value.trim(),
     is_highlight: document.getElementById('te-highlight').value === 'true',
     is_future:    document.getElementById('te-future').checked,
@@ -948,10 +993,11 @@ function saveTimelineEvent() {
 
   sbPatch('timeline_events', 'id=eq.' + currentTimelineId, body)
   .then(function() {
-    status.textContent = '✓ Salvo'; status.style.color = 'var(--ac)';
     var idx = allTimelineEvents.findIndex(function(e){ return e.id === currentTimelineId; });
-    if (idx >= 0) { Object.assign(allTimelineEvents[idx], body); renderTimelineList(allTimelineEvents); document.getElementById('time-item-'+currentTimelineId).classList.add('on'); }
-    setTimeout(function(){ status.textContent = ''; }, 3000);
+    if (idx >= 0) Object.assign(allTimelineEvents[idx], body);
+    renderTimelineList(allTimelineEvents);
+    renderDashboardTimeline();
+    closeTimelineEditor();
   })
   .catch(function(e) {
     status.textContent = '✗ Erro ao salvar'; status.style.color = '#C62828';
@@ -966,11 +1012,10 @@ function deleteTimelineEvent() {
   sbDelete('timeline_events', currentTimelineId)
   .then(function() {
     allTimelineEvents = allTimelineEvents.filter(function(e){ return e.id !== currentTimelineId; });
-    currentTimelineId = null;
+    closeTimelineEditor();
     renderTimelineList(allTimelineEvents);
     setEl('time-count-badge', allTimelineEvents.length);
-    document.getElementById('time-editor').style.display = 'none';
-    document.getElementById('time-empty').style.display = 'flex';
+    renderDashboardTimeline();
   })
   .catch(function(e){ console.error(e); });
 }

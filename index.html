@@ -357,62 +357,65 @@
 
 <!-- TIMELINE -->
 <div id="v-time" class="view">
-  <div class="top"><div><div class="pt">Linha do Tempo</div><div class="ps" id="time-sub">Eventos da história</div></div><div class="ta"><button class="btn p" onclick="newTimelineEvent()">+ Evento</button></div></div>
+  <div class="top"><div><div class="pt">Linha do Tempo</div><div class="ps" id="time-sub">Eventos da história · <span id="time-count-badge">0</span> eventos</div></div><div class="ta"><button class="btn p" onclick="newTimelineEvent()">+ Evento</button></div></div>
   <div class="con">
-    <div class="chl2" style="grid-template-columns:280px 1fr">
-      <div class="cp">
-        <div class="cph">Eventos <span style="color:var(--tx3);font-weight:400;font-size:11px" id="time-count-badge">0</span></div>
-        <div id="time-list"></div>
+    <div id="time-empty-state" style="display:none;text-align:center;padding:60px 20px;color:var(--tx3)">
+      <div style="font-size:40px;margin-bottom:10px">🗺️</div>
+      <div style="font-size:15px;font-weight:600;color:var(--tx2);margin-bottom:6px">Sua linha do tempo está vazia</div>
+      <div style="font-size:13px;line-height:1.6">Clique em "+ Evento" para adicionar o primeiro marco da história,<br/>ou marque trechos como 📅 Evento na página de Escrita.</div>
+    </div>
+    <div class="tl-flow" id="time-list"></div>
+  </div>
+</div>
+
+<!-- Modal de edição de evento -->
+<div class="te-modal" id="te-modal" onclick="if(event.target===this)closeTimelineEditor()">
+  <div class="te-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div style="font-size:15px;font-weight:800;color:var(--tx)">Editar evento</div>
+      <button class="btn" style="padding:4px 12px" onclick="closeTimelineEditor()">✕</button>
+    </div>
+    <div style="margin-bottom:14px">
+      <div class="ce-label">Título do evento</div>
+      <input id="te-title" class="ce-input" style="width:100%;font-size:15px;font-weight:600" placeholder="O que acontece?"/>
+    </div>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;margin-bottom:14px">
+      <div>
+        <div class="ce-label">Data / momento na história</div>
+        <input id="te-date" class="ce-input" placeholder="ex: 10 Jul 2030 · Melbourne"/>
       </div>
-      <div class="ew" style="padding:0">
-        <div id="time-empty" class="ee">
-          <div style="font-size:40px">🗺️</div>
-          <div style="font-size:15px;font-weight:500;color:var(--tx2)">Selecione ou crie um evento</div>
-          <div style="font-size:13px;color:var(--tx3);text-align:center;max-width:300px;line-height:1.6">Clique em "+ Evento" para adicionar um novo marco na linha do tempo.</div>
-        </div>
-        <div id="time-editor" style="display:none;flex:1;overflow-y:auto;padding:28px 32px">
-          <div style="max-width:560px">
-            <div style="margin-bottom:16px">
-              <div class="ce-label">Título do evento</div>
-              <input id="te-title" class="ce-input" style="width:100%;font-size:15px;font-weight:600" placeholder="O que acontece?"/>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-              <div>
-                <div class="ce-label">Data / momento na história</div>
-                <input id="te-date" class="ce-input" placeholder="ex: 10 Jul · Melbourne"/>
-              </div>
-              <div>
-                <div class="ce-label">Destaque</div>
-                <select id="te-highlight" class="ce-input">
-                  <option value="false">Normal</option>
-                  <option value="true">⚡ Destaque</option>
-                </select>
-              </div>
-            </div>
-            <div style="margin-bottom:20px">
-              <div class="ce-label">Descrição</div>
-              <textarea id="te-desc" class="ce-textarea" style="min-height:100px" placeholder="O que acontece nesse momento..."></textarea>
-            </div>
-            <div style="margin-bottom:20px">
-              <div class="ce-label">Fotos do evento</div>
-              <div id="te-photos" class="photo-grid"></div>
-              <label class="photo-add">
-                📷 Adicionar fotos
-                <input type="file" accept="image/*" multiple style="display:none" onchange="uploadPhotos(this, 'timeline_events')"/>
-              </label>
-              <span id="te-photo-status" style="font-size:11px;color:var(--tx3);margin-left:10px"></span>
-            </div>
-            <label style="display:flex;align-items:center;gap:8px;margin-bottom:24px;font-size:13px;color:var(--tx2);cursor:pointer">
-              <input type="checkbox" id="te-future"/> Evento futuro (ainda por escrever)
-            </label>
-            <div style="display:flex;gap:10px;align-items:center">
-              <button class="btn p" onclick="saveTimelineEvent()">Salvar evento</button>
-              <span id="te-save-status" style="font-size:12px;color:var(--tx3)"></span>
-              <button class="btn" style="margin-left:auto;color:#C62828;border-color:#FCE4E4;background:#FCE4E4" onclick="deleteTimelineEvent()">Excluir</button>
-            </div>
-          </div>
-        </div>
+      <div>
+        <div class="ce-label">Ordem</div>
+        <input id="te-order" type="number" class="ce-input" min="1" step="1"/>
       </div>
+      <div>
+        <div class="ce-label">Destaque</div>
+        <select id="te-highlight" class="ce-input">
+          <option value="false">Normal</option>
+          <option value="true">⚡ Destaque</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div class="ce-label">Descrição</div>
+      <textarea id="te-desc" class="ce-textarea" style="min-height:90px" placeholder="O que acontece nesse momento..."></textarea>
+    </div>
+    <div style="margin-bottom:16px">
+      <div class="ce-label">Fotos do evento</div>
+      <div id="te-photos" class="photo-grid"></div>
+      <label class="photo-add">
+        📷 Adicionar fotos
+        <input type="file" accept="image/*" multiple style="display:none" onchange="uploadPhotos(this, 'timeline_events')"/>
+      </label>
+      <span id="te-photo-status" style="font-size:11px;color:var(--tx3);margin-left:10px"></span>
+    </div>
+    <label style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px;color:var(--tx2);cursor:pointer">
+      <input type="checkbox" id="te-future"/> Evento futuro (ainda por escrever)
+    </label>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="btn p" onclick="saveTimelineEvent()">Salvar evento</button>
+      <span id="te-save-status" style="font-size:12px;color:var(--tx3)"></span>
+      <button class="btn" style="margin-left:auto;color:#C62828;border-color:#C62828" onclick="deleteTimelineEvent()">Excluir</button>
     </div>
   </div>
 </div>
