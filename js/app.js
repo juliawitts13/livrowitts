@@ -1642,7 +1642,12 @@ var timelineLoaded = false;
 var locationsLoaded = false;
 var relationshipsLoaded = false;
 
+function toggleSb(open) {
+  document.querySelector('.sb').classList.toggle('open', open);
+}
+
 function go(name, el) {
+  toggleSb(false);
   document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('on'); });
   var t = document.getElementById('v-' + name);
   if (t) t.classList.add('on');
